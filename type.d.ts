@@ -12,6 +12,42 @@ declare global {
         icon: ImageSourcePropType;
     }
 
+    interface BadgeProps {
+        text: string;
+        icon: ImageSourcePropType;
+    }
+
+    interface WeeklyStats {
+        monday : {
+            visited: boolean;
+            volume: number;
+        }
+        tuesday : {
+            visited: boolean;
+            volume: number;
+        }
+        wednesday : {
+            visited: boolean;
+            volume: number;
+        }
+        thursday : {
+            visited: boolean;
+            volume: number;
+        }
+        friday : {
+            visited: boolean;
+            volume: number;
+        }
+        saturday : {
+            visited: boolean;
+            volume: number;
+        }
+        sunday : {
+            visited: boolean;
+            volume: number;
+        }
+    }
+
     interface Subscription {
         id: string;
         icon: ImageSourcePropType;
@@ -53,3 +89,4 @@ declare global {
 }
 
 export { };
+

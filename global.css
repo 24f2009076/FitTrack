@@ -62,8 +62,8 @@
         @apply size-6;
     }
 
-    .home-header {
-        @apply mb-2.5 flex-row items-center justify-between;
+    .home-navbar {
+        @apply mb-4 flex-row items-center justify-between border-b border-black/10 pb-2 shadow-sm;
     }
 
     .home-user {
@@ -71,19 +71,75 @@
     }
 
     .home-avatar {
-        @apply size-16 rounded-full;
+        @apply size-8 rounded-full;
     }
 
     .home-user-name {
-        @apply ml-4 text-2xl font-sans-bold text-primary;
+        @apply ml-2 text-xl font-sans-bold text-primary;
     }
 
-    .home-add-icon {
-        @apply size-12;
+    .text-date {
+        @apply font-sans-medium text-muted-foreground text-lg;
     }
 
-    .home-balance-card {
-        @apply my-2.5 min-h-50 justify-between gap-5 rounded-bl-4xl rounded-tr-4xl bg-accent p-6;
+    .home-title {
+        @apply my-3 flex-col;
+    }
+
+    .badge {
+        @apply flex-row items-center gap-2 rounded-full bg-accent/20 px-3 py-1 mr-2;
+    }
+
+    .badge-icon {
+        @apply size-4;
+    }
+
+    .badge-text {
+        @apply text-sm font-sans-medium text-primary;
+    }
+
+    .home-card {
+        @apply my-3 min-h-50 justify-between gap-5 rounded rounded-xl bg-muted py-5 px-3 shadow-lg;
+    }
+
+    .home-card-insight {
+        @apply my-3 min-h-50 justify-between gap-5 rounded rounded-xl bg-primary/90 py-5 px-3 shadow-lg;
+    }
+
+    .workout-card-title {
+        @apply self-start text-sm font-sans-bold text-white bg-accent px-3 py-1 rounded-full ;
+    }
+
+    .workout-card-name {
+        @apply mt-2 text-4xl font-sans-bold text-primary min-h-20;
+    }
+
+    .workout-detail {
+        @apply mr-3 flex-row items-center;
+    }
+
+    .workout-detail-text {
+        @apply text-sm font-sans-medium text-muted-foreground;
+    }
+
+    .workout-detail-icon {
+        @apply size-4 mr-1;
+    }
+
+    .workout-start-button {
+        @apply mt-4 items-center rounded-2xl bg-accent py-3;
+    }
+
+    .pr-icon {
+        @apply bg-accent/20 p-3 rounded-full justify-center;
+    }
+
+    .pr-text {
+        @apply flex-1 ml-3;
+    }
+
+    .weekly-chart-title {
+        @apply mb-3 text-xl font-sans-bold text-primary;
     }
 
     .home-balance-label {
@@ -417,4 +473,8 @@
     .category-chip-text-active {
         @apply text-accent;
     }
-}
+
+    .text-title {
+        @apply text-3xl font-sans-bold text-primary;
+    }
+}   
