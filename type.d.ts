@@ -48,6 +48,17 @@ declare global {
         }
     }
 
+    interface ActiveRoutineProps {
+        routineName: string;
+        daysOfWeek: number;
+        numberOfExercises: number;
+        tags: string[];
+    }
+
+    interface RoutineLibrary {
+        routines: ActiveRoutineProps[];
+    }
+
     interface Subscription {
         id: string;
         icon: ImageSourcePropType;

@@ -1,3 +1,4 @@
+import activate from "@/assets/icons/activate.png";
 import activity from "@/assets/icons/activity.png";
 import add from "@/assets/icons/add.png";
 import adobe from "@/assets/icons/adobe.png";
@@ -5,8 +6,12 @@ import back from "@/assets/icons/back.png";
 import canva from "@/assets/icons/canva.png";
 import claude from "@/assets/icons/claude.png";
 import coach from "@/assets/icons/coach.png";
+import dateAccent from "@/assets/icons/date-accent.png";
+import date from "@/assets/icons/days-of-week.png";
 import dropbox from "@/assets/icons/dropbox.png";
 import duration from "@/assets/icons/duration.png";
+import edit from "@/assets/icons/edit.png";
+import exercisesMuted from "@/assets/icons/exercises-muted.png";
 import exercises from "@/assets/icons/exercises.png";
 import figma from "@/assets/icons/figma.png";
 import github from "@/assets/icons/github.png";
@@ -16,7 +21,6 @@ import medium from "@/assets/icons/medium.png";
 import menu from "@/assets/icons/menu.png";
 import notion from "@/assets/icons/notion.png";
 import openai from "@/assets/icons/openai.png";
-import plus from "@/assets/icons/plus.png";
 import profile from "@/assets/icons/profile.png";
 import progress from "@/assets/icons/progress.png";
 import reps from "@/assets/icons/reps.png";
@@ -36,7 +40,6 @@ export const icons = {
     add,
     back,
     menu,
-    plus,
     notion,
     dropbox,
     openai,
@@ -55,7 +58,12 @@ export const icons = {
     exercises,
     reps,
     duration,
-    trophy
+    trophy,
+    date,
+    exercisesMuted,
+    edit,
+    dateAccent,
+    activate
 } as const;
 
 export type IconKey = keyof typeof icons;

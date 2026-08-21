@@ -142,6 +142,91 @@
         @apply mb-3 text-xl font-sans-bold text-primary;
     }
 
+    .tab-header {
+        @apply flex-1 flex justify-center items-center;
+    }
+
+    .page-header {
+        @apply flex-col items-start justify-center gap-2;
+    }
+
+    .head {
+        @apply text-2xl font-sans-bold text-primary;
+    }
+
+    .subhead {
+        @apply text-lg font-sans-medium text-muted-foreground;
+    }
+
+    .active-routine {
+        @apply my-3 min-h-50 rounded rounded-xl bg-accent/80 py-5 px-3 shadow-lg border-l-6 border-primary;
+    }
+
+    .active-routine-title {
+        @apply self-start text-2xl font-sans-bold text-white ;
+    }
+
+    .active-routine-icon {
+        @apply size-6 mr-2;
+    }
+
+    .active-routine-details {
+        @apply mr-3 flex-row items-center gap-4;
+    }
+
+    .section-header {
+        @apply mt-6 mb-2 flex-row items-center justify-between;
+    }
+
+    .section-title {
+        @apply text-lg font-sans-extrabold text-primary;
+    }
+
+    .start-workout {
+        @apply mt-7 items-center flex-row  border-t border-muted/20 pt-7 ;
+    }
+
+    .start-workout-button {
+        @apply rounded-2xl bg-muted py-3 px-6 flex-1 flex items-center justify-center;
+    }
+
+    .edit-workout-button {
+        @apply ml-4 rounded-2xl border border-muted py-3 px-6;
+    }
+
+    .edit-workout-icon {
+        @apply size-6;
+    }
+
+    .routine-card {
+        @apply my-3 rounded rounded-xl bg-muted py-5 px-3 shadow-lg;
+    }
+
+    .routine-card-header {
+        @apply flex-row items-center justify-between border-b border-accent/20 pb-5;
+    }
+
+    .routine-card-title {
+        @apply text-2xl font-sans-bold text-primary;
+    }
+
+    .routine-card-icon {
+        @apply size-4;
+    }
+
+    .routine-card-button {
+        @apply items-center justify-center rounded-full bg-accent/20 p-3 flex-1;
+    }
+
+
+
+
+
+
+
+
+
+
     .home-balance-label {
         @apply text-xl font-sans-semibold text-white/80;
     }
