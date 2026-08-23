@@ -1,9 +1,10 @@
 import ActiveRoutine from "@/components/ActiveRoutine";
 import { RoutineLibrary } from "@/components/RoutineLibrary";
 import { routineLibrary } from "@/constants/data";
+import { router } from "expo-router";
 import { styled } from "nativewind";
 import React from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
  
 const SafeAreaView = styled(RNSafeAreaView);
@@ -48,7 +49,9 @@ const WorkOut = () => {
                 <RoutineLibrary 
                     routines={routineLibrary.routines}
                 />
-
+                <Pressable className="add-routine-button" onPress={() => router.push("/workout/create-routine")}>
+                    <Text className="text-accent font-sans-bold text-lg">+ Add Routine</Text>
+                </Pressable>
             </ScrollView>
 
         </SafeAreaView>

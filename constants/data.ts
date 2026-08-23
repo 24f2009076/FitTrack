@@ -72,3 +72,69 @@ export const routineLibrary: RoutineLibrary = {
         }
     ]
 }
+
+
+export const exerciseLibrary: Exercise[] = [
+    {
+        'name': "Push-ups",
+        'muscleGroup': "Chest"
+    },
+    {
+        'name': "Pull-ups",
+        'muscleGroup': "Back"
+    },
+    {
+        'name': "Lateral Pull-downs",
+        'muscleGroup': "Back"
+    },
+    {
+        'name': "Squats",
+        'muscleGroup': "Legs"
+    },
+    {
+        'name': "Lunges",
+        'muscleGroup': "Legs"
+    },
+    {
+        'name': "Dipping",
+        'muscleGroup': "Triceps"
+    },
+    {
+        'name': "Hammer Curls",
+        'muscleGroup': "Biceps"
+    },
+    {
+        'name': "Seated Row",
+        'muscleGroup': "Back"
+    },
+    {
+        'name': "Leg Press",
+        'muscleGroup': "Legs"
+    },
+    {
+        'name': "Flying Chest Press",
+        'muscleGroup': "Chest"
+    },
+    {
+        'name': "Shoulder Press",
+        'muscleGroup': "Shoulders"
+    }
+]
+
+export const searchExercises = (
+    searchQuery: string = "",
+    muscleGroup: string = "All",
+): Exercise[] => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    const normalizedGroup = muscleGroup.trim().toLowerCase();
+
+    return exerciseLibrary.filter((exercise) => {
+        const matchesQuery = exercise.name.toLowerCase().includes(normalizedQuery);
+        const matchesGroup =
+            normalizedGroup === "" ||
+            normalizedGroup === "all" ||
+            exercise.muscleGroup?.trim().toLowerCase() === normalizedGroup;
+
+        return matchesQuery && matchesGroup;
+    });
+};

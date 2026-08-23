@@ -21,5 +21,5 @@ export default function RootLayout() {
 
   if (!fontsLoaded) { return null };
 
-  return <Stack initialRouteName='(tabs)' screenOptions={{ headerShown: false }} />;
+  return <Stack initialRouteName='(tabs)' screenOptions={{ headerShown: false, animation : "slide_from_right"}} />;
 }

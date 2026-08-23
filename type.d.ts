@@ -59,6 +59,11 @@ declare global {
         routines: ActiveRoutineProps[];
     }
 
+    interface Exercise {
+        name: string;
+        muscleGroup?: string;
+    }
+
     interface Subscription {
         id: string;
         icon: ImageSourcePropType;

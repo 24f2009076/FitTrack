@@ -52,7 +52,8 @@ const TabLayout = () => {
                         title: tab.title,
                         tabBarIcon: ({ focused }) => (
                             <TabIcon focused={focused} icon={tab.icon} />
-                        ) 
+                        ) ,
+                        animation: "shift",
                     }}
                 />
             ))}
