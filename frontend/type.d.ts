@@ -62,6 +62,8 @@ declare global {
     interface Exercise {
         name: string;
         muscleGroup?: string;
+        sets: number;
+        reps: number;
     }
 
     interface Subscription {

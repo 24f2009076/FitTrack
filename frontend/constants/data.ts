@@ -73,51 +73,75 @@ export const routineLibrary: RoutineLibrary = {
     ]
 }
 
+const DEFAULT_REPS = 10;
+const DEFAULT_SETS = 3;
 
 export const exerciseLibrary: Exercise[] = [
     {
         'name': "Push-ups",
-        'muscleGroup': "Chest"
+        'muscleGroup': "Chest",
+        'sets': DEFAULT_SETS,
+        'reps': DEFAULT_REPS
     },
     {
         'name': "Pull-ups",
-        'muscleGroup': "Back"
+        'muscleGroup': "Back",
+        'sets': DEFAULT_SETS,
+        'reps': DEFAULT_REPS
     },
     {
         'name': "Lateral Pull-downs",
-        'muscleGroup': "Back"
+        'muscleGroup': "Back",
+        'sets': DEFAULT_SETS,
+        'reps': DEFAULT_REPS
     },
     {
         'name': "Squats",
-        'muscleGroup': "Legs"
+        'muscleGroup': "Legs",
+        'sets': DEFAULT_SETS,
+        'reps': DEFAULT_REPS
     },
     {
         'name': "Lunges",
-        'muscleGroup': "Legs"
+        'muscleGroup': "Legs",
+        'sets': DEFAULT_SETS,
+        'reps': DEFAULT_REPS
     },
     {
         'name': "Dipping",
-        'muscleGroup': "Triceps"
+        'muscleGroup': "Triceps",
+        'sets': DEFAULT_SETS,
+        'reps': DEFAULT_REPS
     },
     {
         'name': "Hammer Curls",
-        'muscleGroup': "Biceps"
+        'muscleGroup': "Biceps",
+        'sets': DEFAULT_SETS,
+        'reps': DEFAULT_REPS
     },
     {
         'name': "Seated Row",
-        'muscleGroup': "Back"
+        'muscleGroup': "Back",
+        'sets': DEFAULT_SETS,
+        'reps': DEFAULT_REPS
     },
     {
         'name': "Leg Press",
-        'muscleGroup': "Legs"
+        'muscleGroup': "Legs",
+        'sets': DEFAULT_SETS,
+        'reps': DEFAULT_REPS
     },
     {
         'name': "Flying Chest Press",
-        'muscleGroup': "Chest"
+        'muscleGroup': "Chest",
+        'sets': DEFAULT_SETS,
+        'reps': DEFAULT_REPS
     },
     {
         'name': "Shoulder Press",
-        'muscleGroup': "Shoulders"
+        'muscleGroup': "Shoulders",
+        'sets': DEFAULT_SETS,
+        'reps': DEFAULT_REPS
     }
 ]
 
