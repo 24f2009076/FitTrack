@@ -18,31 +18,31 @@ declare global {
     }
 
     interface WeeklyStats {
-        monday : {
+        monday: {
             visited: boolean;
             volume: number;
         }
-        tuesday : {
+        tuesday: {
             visited: boolean;
             volume: number;
         }
-        wednesday : {
+        wednesday: {
             visited: boolean;
             volume: number;
         }
-        thursday : {
+        thursday: {
             visited: boolean;
             volume: number;
         }
-        friday : {
+        friday: {
             visited: boolean;
             volume: number;
         }
-        saturday : {
+        saturday: {
             visited: boolean;
             volume: number;
         }
-        sunday : {
+        sunday: {
             visited: boolean;
             volume: number;
         }
@@ -59,51 +59,30 @@ declare global {
         routines: ActiveRoutineProps[];
     }
 
-    interface Exercise {
+    interface ExerciseResponse {
+        id: string;
         name: string;
-        muscleGroup?: string;
+        primary_muscle: string;
+        description: string | null;
+        equipment: string | null;
+    }
+
+    interface ExerciseItem {
+        id: string;
+        name: string;
+        muscleGroup: string;
+        description: string | null;
+        equipment: string | null;
+    }
+
+    interface RoutineExercise {
+        id: string;
+        name: string;
+        muscleGroup: string;
         sets: number;
         reps: number;
     }
 
-    interface Subscription {
-        id: string;
-        icon: ImageSourcePropType;
-        name: string;
-        plan?: string;
-        category?: string;
-        paymentMethod?: string;
-        status?: string;
-        startDate?: string;
-        price: number;
-        currency?: string;
-        billing: string;
-        renewalDate?: string;
-        color?: string;
-    }
-
-    interface SubscriptionCardProps extends Omit<Subscription, "id"> {
-        expanded: boolean;
-        onPress: () => void;
-        onCancelPress?: () => void;
-        isCancelling?: boolean;
-    }
-
-    interface UpcomingSubscription {
-        id: string;
-        icon: ImageSourcePropType;
-        name: string;
-        price: number;
-        currency?: string;
-        daysLeft: number;
-    }
-
-    interface UpcomingSubscriptionCardProps
-        extends Omit<UpcomingSubscription, "id"> {}
-
-    interface ListHeadingProps {
-        title: string;
-    }
 }
 
 export { };

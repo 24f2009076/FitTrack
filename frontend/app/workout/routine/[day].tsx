@@ -1,11 +1,11 @@
 // app/routine/[day].tsx
 import Dropdown from "@/components/DropDown";
-import { searchExercises } from "@/constants/data";
 import { icons } from "@/constants/icons";
+import { getExercises } from "@/services/exerciseService";
 import { router, useLocalSearchParams } from "expo-router";
 import { styled } from "nativewind";
-import { useState } from "react";
-import { FlatList, Image, Pressable, Text, TextInput, View } from "react-native";
+import { useEffect, useState } from "react";
+import { FlatList, Image, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 import { DayKey, useRoutineStore } from "../../../store/routineStore";
 
@@ -15,17 +15,55 @@ const DEFAULT_SETS = 3;
 const DEFAULT_REPS = 10;
 const MIN_SETS = 1;
 const MIN_REPS = 1;
+// const MUSCLE_GROUPS = ["All", "Chest", "Shoulders", "Biceps", "Triceps", "Legs", "Back"];
+
+
 
 
 
 export default function DayInputForm() {
+
+
+
+
   const { day } = useLocalSearchParams<{ day: DayKey }>();
   const dayData = useRoutineStore((s) => s.days[day]);
   const updateDay = useRoutineStore((s) => s.updateDay);
 
   const [muscleGroup, setMuscleGroup] = useState<string | null>(null);
   const [query, setQuery] = useState<string>("");
-  const feasibleExercises = searchExercises(query, muscleGroup ?? "All");
+
+  const [exercises, setExercises] = useState<ExerciseItem[]>([]);
+
+  useEffect(() => {
+    const fetchExercises = async () => {
+      try {
+        const data = await getExercises();
+        setExercises(data);
+      } catch (error) {
+        console.error("Error fetching exercises:", error);
+      }
+    };
+
+    fetchExercises();
+  }, []);
+
+
+
+  const feasibleExercises = exercises.filter((exercise) => {
+    const matchesSearch = exercise.name
+      .toLowerCase()
+      .includes(query.toLowerCase());
+
+
+    const matchesMuscle =
+      muscleGroup === null ||
+      exercise.muscleGroup === muscleGroup;
+
+
+    return matchesSearch && matchesMuscle;
+  })
+
   const selectedExercises = dayData?.exercises ?? [];
 
   const [newExerciseName, setNewExerciseName] = useState<string>("");
@@ -33,35 +71,49 @@ export default function DayInputForm() {
   const [newExerciseSets, setNewExerciseSets] = useState<number>(DEFAULT_SETS);
   const [newExerciseReps, setNewExerciseReps] = useState<number>(DEFAULT_REPS);
 
+  const MUSCLE_GROUPS = [
+    "All",
+    ...new Set(exercises.map((exercise) => exercise.muscleGroup)),
+  ];
 
   const handleGroupChange = (group: string) => {
     setMuscleGroup(group === "All" ? null : group);
   };
 
-  const normalizeExercise = (exercise: Exercise): Exercise => ({
-    ...exercise,
-    sets: exercise.sets ?? DEFAULT_SETS,
-    reps: exercise.reps ?? DEFAULT_REPS,
+  const normalizeExercise = (
+    exercise: ExerciseItem
+  ): RoutineExercise => ({
+    id: exercise.id,
+    name: exercise.name,
+    muscleGroup: exercise.muscleGroup,
+    sets: DEFAULT_SETS,
+    reps: DEFAULT_REPS,
   });
 
-  const toggleExercise = (exercise: Exercise) => {
-    const exercises = selectedExercises.some(({ name }) => name === exercise.name)
-      ? selectedExercises.filter(({ name }) => name !== exercise.name)
+  const toggleExercise = (exercise: ExerciseItem) => {
+    const exercises = selectedExercises.some(
+      (selected) => selected.id === exercise.id
+    )
+      ? selectedExercises.filter(
+        (selected) => selected.id !== exercise.id
+      )
       : [...selectedExercises, normalizeExercise(exercise)];
 
     updateDay(day, { exercises });
   };
-
-  const updateExerciseCounter = (name: string, field: "sets" | "reps", delta: number) => {
+  const updateExerciseCounter = (id: string, field: "sets" | "reps", delta: number) => {
     const min = field === "sets" ? MIN_SETS : MIN_REPS;
 
     const exercises = selectedExercises.map((exercise) => {
-      if (exercise.name !== name) return exercise;
+      if (exercise.id !== id) return exercise;
 
-      const nextValue = (exercise[field] ?? (field === "sets" ? DEFAULT_SETS : DEFAULT_REPS)) + delta;
+      const nextValue = exercise[field] + delta;
       return {
         ...exercise,
-        [field]: Math.max(min, nextValue),
+        [field]: Math.max(
+          field === "sets" ? MIN_SETS : MIN_REPS,
+          nextValue
+        ),
       };
     });
 
@@ -73,7 +125,7 @@ export default function DayInputForm() {
     if (!name || !newExerciseMuscleGroup || selectedExercises.some((exercise) => exercise.name === name)) return;
 
     updateDay(day, {
-      exercises: [...selectedExercises, { name: name, muscleGroup: newExerciseMuscleGroup, sets: newExerciseSets, reps: newExerciseReps }],
+      exercises: [...selectedExercises, { id: `custom-${Date.now()}`, name: name, muscleGroup: newExerciseMuscleGroup, sets: newExerciseSets, reps: newExerciseReps }],
     });
     setNewExerciseName("");
     setNewExerciseMuscleGroup(null);
@@ -108,7 +160,7 @@ export default function DayInputForm() {
         </View>
       </View>
 
-      <View className="flex-1 px-6">
+      <View className="flex-1 px-6 bg-background/10">
         <TextInput
           value={query}
           onChangeText={setQuery}
@@ -117,8 +169,12 @@ export default function DayInputForm() {
           className="w-full rounded-lg border border-primary px-0 pl-3 pr-3 py-3 text-lg font-sans-bold text-accent"
         />
 
-        <View className="flex-row flex-wrap items-start gap-2 mt-3 bg-background/10">
-          {["All", "Chest", "Back", "Shoulders", "Biceps", "Triceps", "Legs"].map((group) => (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          className="mt-3 grow-0"
+          contentContainerClassName="flex-row items-center gap-2">
+          {MUSCLE_GROUPS.map((group) => (
             <Pressable
               key={group}
               onPress={() => handleGroupChange(group)}
@@ -127,20 +183,22 @@ export default function DayInputForm() {
               <Text>{group}</Text>
             </Pressable>
           ))}
-        </View>
+        </ScrollView>
 
         <FlatList
           data={feasibleExercises}
-          keyExtractor={(exercise) => exercise.name}
+          keyExtractor={(exercise) => exercise.id}
           className="mt-3 flex-1"
           renderItem={({ item: exercise }) => {
-            const selectedExercise = selectedExercises.find(({ name }) => name === exercise.name);
+            const selectedExercise = selectedExercises.find(
+              ({ id }) => id === exercise.id
+            );
             const isSelected = Boolean(selectedExercise);
 
             return <View className="mb-2">
               <Pressable
                 onPress={() => toggleExercise(exercise)}
-                className={`rounded-lg py-5 px-3 flex-row justify-start items-center gap-4 border ${isSelected
+                className={`rounded-lg py-5 px-3 flex-row flex-wrap justify-start items-center gap-4 border ${isSelected
                   ? "bg-accent/20 border-accent"
                   : "bg-muted border-transparent"
                   }`}
@@ -156,21 +214,21 @@ export default function DayInputForm() {
                   className="size-8 absolute right-3"
                 />
               </Pressable>
-              
+
               {isSelected && selectedExercise && (
                 <View className="px-2 pb-3 bg-muted rounded-b-2xl shadow-sm">
                   <View className="flex-row items-center justify-between py-1">
                     <Text className="font-sans-semibold text-primary">Sets</Text>
                     <View className="flex-row items-center gap-1 w-30 justify-around">
                       <Pressable
-                        onPress={() => updateExerciseCounter(exercise.name, "sets", -1)}
+                        onPress={() => updateExerciseCounter(exercise.id, "sets", -1)}
                         className="size-8 items-center justify-center"
                       >
                         <Text className="font-sans-bold text-accent text-lg">-</Text>
                       </Pressable>
                       <Text className="font-sans-bold text-accent text-lg px-3">{selectedExercise.sets}</Text>
                       <Pressable
-                        onPress={() => updateExerciseCounter(exercise.name, "sets", 1)}
+                        onPress={() => updateExerciseCounter(exercise.id, "sets", 1)}
                         className="size-8 items-center justify-center"
                       >
                         <Text className="font-sans-bold text-accent text-lg">+</Text>
@@ -212,7 +270,7 @@ export default function DayInputForm() {
               />
 
               <Dropdown
-                options={["Chest", "Back", "Legs", "Shoulders", "Biceps", "Triceps"]}
+                options={MUSCLE_GROUPS.filter((group) => group !== "All")}
                 value={newExerciseMuscleGroup}
                 onSelect={setNewExerciseMuscleGroup}
                 placeholder="Select muscle group"
