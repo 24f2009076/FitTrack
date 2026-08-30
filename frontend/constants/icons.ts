@@ -15,11 +15,14 @@ import editAccent from "@/assets/icons/edit-accent.png";
 import edit from "@/assets/icons/edit.png";
 import exercisesMuted from "@/assets/icons/exercises-muted.png";
 import exercises from "@/assets/icons/exercises.png";
+import eyeAccent from "@/assets/icons/eye-accent.png";
+import eyeDark from "@/assets/icons/eye-dark.png";
 import figma from "@/assets/icons/figma.png";
 import github from "@/assets/icons/github.png";
 import go from "@/assets/icons/go.png";
 import home from "@/assets/icons/home.png";
 import levelBadge from "@/assets/icons/level-badge.png";
+import logout from "@/assets/icons/logout.png";
 import medium from "@/assets/icons/medium.png";
 import menu from "@/assets/icons/menu.png";
 import notion from "@/assets/icons/notion.png";
@@ -77,6 +80,9 @@ export const icons = {
     squarePlusSolid,
     plusAccent,
     editAccent,
+    eyeAccent,
+    eyeDark,
+    logout
 } as const;
 
 export type IconKey = keyof typeof icons;

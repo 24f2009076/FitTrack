@@ -3,6 +3,7 @@ import WeeklyChart from "@/components/WeeklyChart";
 import { date, USER } from "@/constants/data";
 import { icons } from "@/constants/icons";
 import images from "@/constants/images";
+import { useAuth } from "@/context/AuthContext";
 import "@/global.css";
 import { formatDate, formatTime } from "@/lib/utils";
 import { styled } from "nativewind";
@@ -12,13 +13,19 @@ import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 const SafeAreaView = styled(RNSafeAreaView);
 
 export default function App() {
+
+  const { signOut } = useAuth();
+  
   return (
     <SafeAreaView className="flex-1 bg-background">
     
-      <View className="home-navbar px-5">
+      <View className="home-navbar px-5 flex">
         <View className="home-user">
           <Image source={images.avatar} className="home-avatar" />
-          <Text className="home-user-name"> {USER.name} </Text>
+          <Text className="home-user-name flex-1"> {USER.name} </Text>
+          <Pressable onPress={signOut}>
+            <Image source={icons.logout} className="size-6" />
+          </Pressable>
         </View>
       </View>
 
