@@ -7,6 +7,7 @@ from app.schemas.exercise import (
     ExerciseResponse,
 )
 from app.service.exercise import bulk_create_exercises, get_exercises
+from app.routers.auth import get_current_user
 
 
 router = APIRouter(
@@ -34,6 +35,7 @@ def create_exercises_bulk(
     response_model=list[ExerciseResponse],
 )
 def list_exercises(
+    current_user=Depends(get_current_user),
     search : str | None = Query(
         default=None,
         description="Search exercises by name"
@@ -55,6 +57,7 @@ def list_exercises(
 ):
 
     return get_exercises(
+        user_id=str(current_user.id),
         db=db,
         search=search,
         primary_muscle=primary_muscle,

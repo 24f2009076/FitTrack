@@ -6,21 +6,49 @@ import {
     Image,
     Pressable,
     Text,
-    View,
+    TextInput,
+    View
 } from "react-native";
 
 import { useOnboarding } from "@/context/OnboardingContext";
 
 import { icons } from "@/constants/icons";
+import { useAuth } from "@/context/AuthContext";
+import { updateProfile } from "@/services/profileService";
 import { styled } from "nativewind";
+import React, { useState } from "react";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
 
+const levelMap = {
+    beginner: "Beginner",
+    intermediate: "Intermediate",
+    advanced: "Advanced",
+} as const;
+
+
+const goalMap = {
+    build_muscle: "Build Muscle",
+    gain_strength: "Improve Strength",
+    lose_fat: "Lose Weight",
+    general_fitness: "General Fitness",
+} as const;
+
 
 export default function ProfilePicScreen() {
 
-    const { data, updateData } = useOnboarding();
+    const { session } = useAuth();
+
+
+    const {
+        data,
+        updateData,
+        resetOnboarding
+    } = useOnboarding();
+
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
 
     async function pickImage() {
@@ -54,32 +82,50 @@ export default function ProfilePicScreen() {
     }
 
 
-    function handleFinish() {
+    async function handleFinish() {
 
-        /*
-            BACKEND LATER
+        if (!data.goal || !data.level || !data.username.trim()) {
+            setError("Please complete all required fields before finishing.");
+            return;
+        }
 
-            Eventually this is where we'll send:
+        if (!session?.accessToken) {
+            setError("Authentication token not found.");
+            return;
+        }
 
-            {
-                level: data.level,
-                goal: data.goal,
-                height: Number(data.height),
-                weight: Number(data.weight),
-                profileImage: data.profileImage
+        try {
+
+            setLoading(true);
+            setError('');
+
+            const payload = {
+                username: data.username.trim(),
+
+                level: levelMap[data.level],
+
+                goal: goalMap[data.goal],
+
+                height_cm: Number(data.height),
+
+                weight_kg: Number(data.weight),
+            };
+
+            await updateProfile(payload, session?.accessToken);
+
+            resetOnboarding();
+
+            router.replace("/(tabs)");
+        } catch (error) {
+
+            if (error instanceof Error) {
+                setError(error.message);
+            } else {
+                setError("An unexpected error occurred. Please try again.");
             }
-
-            For now we're only testing the
-            frontend onboarding flow.
-        */
-
-        console.log(
-            "Onboarding completed:",
-            data
-        );
-
-
-        router.replace("/(tabs)");
+        } finally {
+            setLoading(false);
+        }
     }
 
 
@@ -117,6 +163,26 @@ export default function ProfilePicScreen() {
                 <Text className="mt-5 font-sans-bold text-3xl text-foreground">
                     Make FitTrack yours
                 </Text>
+
+                <View className="mt-8">
+                    <Text className="mb-2 font-sans-semibold text-sm text-foreground">
+                        Username
+                    </Text>
+
+                    <TextInput
+                        value={data.username}
+                        onChangeText={(value) =>
+                            updateData({
+                                username: value,
+                            })
+                        }
+                        placeholder="Choose a username"
+                        placeholderTextColor="#9CA3AF"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        className="rounded-2xl border border-foreground/10 bg-card px-5 py-4 font-sans-semibold text-base text-foreground"
+                    />
+                </View>
 
                 <Text className="mt-3 font-sans-regular text-base leading-6 text-foreground/60">
                     Add a profile photo to make your fitness journey a little more personal.
@@ -227,6 +293,11 @@ export default function ProfilePicScreen() {
                         </Text>
 
                     </Pressable>
+                    {error ? (
+                        <Text className="text-center text-sm text-destructive">
+                            {error}
+                        </Text>
+                    ) : null}
 
                 </View>
 

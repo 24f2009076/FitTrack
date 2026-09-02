@@ -1,7 +1,16 @@
 const API_URL = "http://192.168.29.169:8000";
 
-export const getExercises = async (): Promise<ExerciseItem[]> => {
-  const response = await fetch(`${API_URL}/exercises`);
+export const getExercises = async (accessToken : string): Promise<ExerciseItem[]> => {
+  const response = await fetch(
+    `${API_URL}/exercises`,
+  {
+    method: "GET",
+
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${accessToken}`,
+    }
+  });
 
   if (!response.ok) {
     throw new Error(`Failed to fetch exercises: ${response.status}`);

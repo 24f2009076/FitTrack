@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, ForeignKey, Text
+from sqlalchemy import Boolean, ForeignKey, Integer, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.exercise import Exercise
@@ -10,7 +10,8 @@ class Routine(Base):
 
     id: Mapped[str] = mapped_column(
         UUID(as_uuid=False),
-        primary_key=True
+        primary_key=True,
+        server_default=text("gen_random_uuid()")
     )
 
     user_id: Mapped[str] = mapped_column(
@@ -24,15 +25,27 @@ class Routine(Base):
         nullable=False
     )
 
-    description: Mapped[str | None] = mapped_column(Text)
+    description: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True
+    )
 
     is_active: Mapped[bool] = mapped_column(
         Boolean,
-        nullable=False
+        nullable=False,
+        default=False
+    )
+    
+    is_deleted: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False
     )
     
     days: Mapped[list["RoutineDay"]] = relationship(
-        back_populates="routine"
+        "RoutineDay",
+        back_populates="routine",
+        order_by="RoutineDay.day_of_week"
     )
 
 
@@ -42,7 +55,8 @@ class RoutineDay(Base):
 
     id: Mapped[str] = mapped_column(
         UUID(as_uuid=False),
-        primary_key=True
+        primary_key=True,
+        server_default=text("gen_random_uuid()")
     )
 
     routine_id: Mapped[str] = mapped_column(
@@ -52,22 +66,36 @@ class RoutineDay(Base):
     )
 
     day_of_week: Mapped[int] = mapped_column(
+        Integer,
         nullable=False
     )
 
-    name: Mapped[str | None] = mapped_column(Text)
+    name: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True
+    )
 
     is_rest_day: Mapped[bool] = mapped_column(
         Boolean,
-        nullable=False
+        nullable=False,
+        default=False
+    )
+    
+    is_deleted: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False
     )
     
     routine: Mapped["Routine"] = relationship(
+        "Routine",
         back_populates="days"
     )
     
     exercises: Mapped[list["RoutineExercise"]] = relationship(
-        back_populates="routine_day"
+        "RoutineExercise",
+        back_populates="routine_day",
+        order_by="RoutineExercise.exercise_order"
     )
 
 
@@ -76,7 +104,8 @@ class RoutineExercise(Base):
 
     id: Mapped[str] = mapped_column(
         UUID(as_uuid=False),
-        primary_key=True
+        primary_key=True,
+        server_default=text("gen_random_uuid()")
     )
 
     routine_day_id: Mapped[str] = mapped_column(
@@ -92,30 +121,41 @@ class RoutineExercise(Base):
     )
 
     exercise_order: Mapped[int] = mapped_column(
+        Integer,
         nullable=False
     )
 
-    sets: Mapped[int | None] = mapped_column()
+    planned_sets: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False
+    )
 
-    rep_min: Mapped[int | None] = mapped_column()
+    planned_reps: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True
+    )
 
-    rep_max: Mapped[int | None] = mapped_column()
-
-    notes: Mapped[str | None] = mapped_column(Text)
+    planned_duration_seconds: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True
+    )
+    
     
     routine_day: Mapped["RoutineDay"] = relationship(
+        "RoutineDay",
         back_populates="exercises"
     )
     
     exercise: Mapped["Exercise"] = relationship(
+        "Exercise",
         back_populates="routine_exercises"
     )
 
     @property
     def reps(self) -> int | None:
-        if self.rep_min is not None:
-            return self.rep_min
-        return self.rep_max
+        if self.planned_reps is not None:
+            return self.planned_reps
+        return None
 
     @reps.setter
     def reps(self, value: int | None) -> None:

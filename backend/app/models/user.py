@@ -1,4 +1,4 @@
-from sqlalchemy import Text
+from sqlalchemy import ForeignKey, Numeric, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -12,11 +12,33 @@ class Profile(Base):
         primary_key=True
     )
 
-    display_name: Mapped[str | None] = mapped_column(Text)
+    username: Mapped[str | None] = mapped_column(
+        Text,
+        unique=True,
+        nullable=True
+    )
 
-    avatar_url: Mapped[str | None] = mapped_column(Text)
-
+    profile_pic_url: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True
+    )
+    
     level: Mapped[str] = mapped_column(
         Text,
-        nullable=False
+        nullable=True
+    )
+    
+    goal: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True
+    )
+    
+    height_cm: Mapped[float | None] = mapped_column(
+        Numeric,
+        nullable=True
+    )
+    
+    weight_kg: Mapped[float | None] = mapped_column(
+        Numeric,
+        nullable=True
     )

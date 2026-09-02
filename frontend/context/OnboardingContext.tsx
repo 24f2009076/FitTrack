@@ -24,6 +24,7 @@ interface OnboardingData {
     goal: FitnessGoal | null;
     height: string;
     weight: string;
+    username: string;
     profileImage: string | null;
 }
 
@@ -44,6 +45,7 @@ const defaultData: OnboardingData = {
     goal: null,
     height: "",
     weight: "",
+    username: "",
     profileImage: null,
 };
 

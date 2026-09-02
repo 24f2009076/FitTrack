@@ -1,6 +1,7 @@
 // app/routine/[day].tsx
 import Dropdown from "@/components/DropDown";
 import { icons } from "@/constants/icons";
+import { useAuth } from "@/context/AuthContext";
 import { getExercises } from "@/services/exerciseService";
 import { router, useLocalSearchParams } from "expo-router";
 import { styled } from "nativewind";
@@ -27,6 +28,7 @@ export default function DayInputForm() {
 
 
   const { day } = useLocalSearchParams<{ day: DayKey }>();
+  const {session} = useAuth();
   const dayData = useRoutineStore((s) => s.days[day]);
   const updateDay = useRoutineStore((s) => s.updateDay);
 
@@ -38,7 +40,7 @@ export default function DayInputForm() {
   useEffect(() => {
     const fetchExercises = async () => {
       try {
-        const data = await getExercises();
+        const data = await getExercises(session?.accessToken  || "");
         setExercises(data);
       } catch (error) {
         console.error("Error fetching exercises:", error);

@@ -1,4 +1,5 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from typing import Literal
 
 
 VALID_MUSCLES = {
@@ -29,13 +30,20 @@ VALID_EQUIPMENT = {
     "Other",
 }
 
-
+TrackingType = Literal[
+    "reps",
+    "reps_weight",
+    "duration",
+    "duration_weight",
+]
 
 class ExerciseCreate(BaseModel):
     name: str = Field(min_length=1, max_length=200)
     description: str | None = None
     primary_muscle: str | None = None
     equipment: str | None = None
+    tracking_type: TrackingType = "reps_weight"
+    is_deleted: bool = False
 
     @field_validator("primary_muscle")
     @classmethod
@@ -66,5 +74,7 @@ class ExerciseResponse(BaseModel):
     name: str
     description: str | None
     primary_muscle: str | None
+    tracking_type: TrackingType
     equipment: str | None
     created_by: str | None
+    is_deleted: bool

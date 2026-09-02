@@ -3,7 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 from app.supabase import supabase
-from app.schemas.auth import AuthRequest, AuthResponse
+from app.schemas.auth import AuthRequest, AuthResponse, ProfileResponse, ProfileUpdate
 from app.database import get_db
 from app.models.user import Profile
 
@@ -39,13 +39,18 @@ def signup(data: AuthRequest, db: Session = Depends(get_db)):
             )
 
         # 2. Create the FitTrack profile
-        profile = Profile(
-            id=str(response.user.id),
-            level="Beginner"
+        existing_profile = db.get(
+            Profile,
+            str(response.user.id)
         )
+        
+        if existing_profile is None:
+            profile = Profile(
+                id=str(response.user.id)
+            )
 
-        db.add(profile)
-        db.commit()
+            db.add(profile)
+            db.commit()
 
         # 3. Return authentication information
         return AuthResponse(
@@ -97,7 +102,7 @@ def login(data: AuthRequest):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
         )
-        
+
 
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security)
@@ -124,3 +129,63 @@ def get_current_user(
             detail="Invalid access token"
         )
         
+        
+        
+        
+@router.get("/profile", response_model=ProfileResponse)
+def get_profile(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    profile = db.get(
+        Profile,
+        str(current_user.id)
+    )
+    
+    if profile is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Profile not found"
+        )
+    
+    return profile
+
+
+
+@router.patch("/profile", response_model=ProfileResponse)
+def update_profile(
+    data: ProfileUpdate,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    profile = db.get(
+        Profile,
+        str(current_user.id)
+    )
+
+    if profile is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Profile not found."
+        )
+
+    update_data = data.model_dump(
+        exclude_unset=True
+    )
+
+    for field, value in update_data.items():
+        setattr(profile, field, value)
+
+    try:
+        db.commit()
+        db.refresh(profile)
+
+        return profile
+
+    except Exception as e:
+        db.rollback()
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )

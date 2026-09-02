@@ -14,8 +14,8 @@ const SafeAreaView = styled(RNSafeAreaView);
 
 export default function App() {
 
-  const { signOut } = useAuth();
-  
+  const { signOut, session } = useAuth();
+
   return (
     <SafeAreaView className="flex-1 bg-background">
     
