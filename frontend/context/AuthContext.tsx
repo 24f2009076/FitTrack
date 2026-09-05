@@ -8,6 +8,8 @@ import {
 
 import * as SecureStore from "expo-secure-store";
 
+import { getSupabase } from "@/lib/supabase";
+
 
 export interface AuthSession {
     accessToken: string;
@@ -65,6 +67,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 userId &&
                 email
             ) {
+                const supabase = getSupabase();
+                const { error } = await supabase.auth.setSession({
+                    access_token: accessToken,
+                    refresh_token: refreshToken
+                })
+
+                if (error) {
+                    console.error("Failed to set Supabase session:", error);
+                    setSession(null);
+                    return;
+                }
+
                 setSession({
                     accessToken,
                     refreshToken,
@@ -108,17 +122,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             ),
         ]);
 
+        const supabase = getSupabase();
+
+        const { error } = await supabase.auth.setSession({
+            access_token: newSession.accessToken,
+            refresh_token: newSession.refreshToken
+        });
+
+        if (error) {
+            console.error("Failed to set Supabase session:", error);
+        }
+
+
         setSession(newSession);
     }
 
 
     async function signOut() {
         try {
+            const supabase = getSupabase();
             await Promise.all([
                 SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY),
                 SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY),
                 SecureStore.deleteItemAsync(USER_ID_KEY),
                 SecureStore.deleteItemAsync(EMAIL_KEY),
+
+                supabase.auth.signOut(),
             ]);
         } finally {
             setSession(null);

@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 
+import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 
 import {
@@ -14,7 +15,7 @@ import { useOnboarding } from "@/context/OnboardingContext";
 
 import { icons } from "@/constants/icons";
 import { useAuth } from "@/context/AuthContext";
-import { updateProfile } from "@/services/profileService";
+import { updateProfile, uploadProfileImage } from "@/services/profileService";
 import { styled } from "nativewind";
 import React, { useState } from "react";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
@@ -60,17 +61,25 @@ export default function ProfilePicScreen() {
                 aspect: [1, 1],
                 quality: 0.8,
             });
+        
+        if(result.canceled) return;
 
+        const selectedImage = result.assets[0];
 
-        if (!result.canceled) {
+        const context = ImageManipulator.manipulate(
+            selectedImage.uri
+        )
 
-            const imageUri =
-                result.assets[0].uri;
+        const renderedImage = await context.renderAsync();
 
-            updateData({
-                profileImage: imageUri,
-            });
-        }
+        const jpegImage = await renderedImage.saveAsync({
+            format: SaveFormat.JPEG,
+            compress: 0.8,
+        })
+
+        updateData({
+            profileImage: jpegImage.uri,
+        })
     }
 
 
@@ -99,6 +108,19 @@ export default function ProfilePicScreen() {
             setLoading(true);
             setError('');
 
+            let profilePicUrl : string | null = null;
+
+            if (data.profileImage) {
+
+                const uploadResult = 
+                    await uploadProfileImage(
+                        data.profileImage,
+                        session.userId
+                    );
+                
+                profilePicUrl = uploadResult.publicUrl;
+            }
+
             const payload = {
                 username: data.username.trim(),
 
@@ -109,6 +131,8 @@ export default function ProfilePicScreen() {
                 height_cm: Number(data.height),
 
                 weight_kg: Number(data.weight),
+
+                profile_pic_url: profilePicUrl,
             };
 
             await updateProfile(payload, session?.accessToken);

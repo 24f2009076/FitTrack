@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from uuid import uuid4
+
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
@@ -188,4 +190,62 @@ def update_profile(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
+        )
+
+@router.post("/profile_pic")
+async def upload_profile_pic(
+    file: UploadFile = File(...),
+    current_user=Depends(get_current_user),
+):
+    allowed_types = {
+    "image/jpeg",
+    "image/png",
+}
+    
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid file type. Only JPEG and PNG are allowed."
+        )
+    
+    contents = await file.read()
+    
+    extension_map = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+    }
+    
+    extension = extension_map[file.content_type]
+    
+    file_path = (
+        f"{current_user.id}/{uuid4()}.{extension}"
+    )
+    
+    try:
+        supabase.storage.from_("profile_pics").upload(
+            path=file_path,
+            file=contents,
+            file_options={
+                "content-type": file.content_type,
+                "upsert": False
+            }
+        )
+        public_url = (
+            supabase.storage
+            .from_("profile_pics")
+            .get_public_url(file_path)
+        )
+        
+        return {
+            "path": file_path,
+            "public_url": public_url
+        }
+    
+    except Exception as e:
+        print(f"Error uploading profile picture: {str(e)}")
+        
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to upload profile picture: {str(e)}"
         )
