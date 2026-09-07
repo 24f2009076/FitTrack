@@ -10,6 +10,7 @@ export const colors = {
     success: "#16a34a",
     destructive: "#dc2626",
     subscription: "#8fd1bd",
+    faded: "#9CA3AF"
 } as const;
 
 export const spacing = {

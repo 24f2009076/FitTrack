@@ -30,6 +30,7 @@ export default function App() {
   const [loadingProfile, setLoadingProfile] = useState(false);
 
   useEffect(() => {
+    if (!session) signOut();
     const fetchProfile = async () => {
       try {
         // console.log("API URL:", process.env.EXPO_PUBLIC_API_URL);
@@ -45,7 +46,8 @@ export default function App() {
         )
 
         if (!response.ok) {
-          throw new Error("Failed to fetch profile: " + response.status);
+          signOut();
+          // throw new Error("Failed to fetch profile: " + response.status);
         }
 
         const data = await response.json();

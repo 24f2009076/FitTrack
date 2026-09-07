@@ -93,3 +93,26 @@ def get_exercises(
     result = db.execute(stmt)
 
     return list(result.scalars().all())
+
+
+def create_custom_exercise(
+    db: Session,
+    user_id: str,
+    exercise_data: ExerciseCreate
+) -> Exercise:
+    
+    new_exercise = Exercise(
+        name=exercise_data.name,
+        description=exercise_data.description,
+        primary_muscle=exercise_data.primary_muscle,
+        equipment=exercise_data.equipment,
+        tracking_type=exercise_data.tracking_type,
+        is_deleted=False,
+        created_by=user_id
+    )
+    
+    db.add(new_exercise)
+    db.commit()
+    db.refresh(new_exercise)
+    
+    return new_exercise

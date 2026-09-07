@@ -1,10 +1,9 @@
 import { icons } from "@/constants/icons";
-import { router } from "expo-router";
-import { Image, Pressable, Text, View } from "react-native";
+import { Image, Text, View } from "react-native";
 
-const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, tags, days } : ActiveRoutineProps) => {
-    
-    const dayMap : { [key: number]: string } = {
+const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, tags, days, isActive }: ViewRoutineProps) => {
+
+    const dayMap: { [key: number]: string } = {
         0: "S",
         1: "M",
         2: "T",
@@ -14,17 +13,19 @@ const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, 
         6: "S"
     }
 
-    
- 
-    
-    
+
+
+
+
     return (
-        <View className="active-routine">
+        <View className="active-routine pb-7">
+
 
             <View className="px-2 py-1 bg-muted/20 rounded-full self-start mb-2 flex-row items-center gap-2">
                 <View className="h-2 w-2 rounded-full bg-muted outline-3 outline-accent/50"></View>
-                <Text className="text-muted font-sans-bold text-xs">ACTIVE</Text>
+                <Text className="text-muted font-sans-bold text-xs">{isActive ? "ACTIVE" : "INACTIVE"}</Text>
             </View>
+
 
             <Text className="active-routine-title">{routineName}</Text>
 
@@ -54,23 +55,6 @@ const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, 
                         <View className={`h-5 w-5 rounded-full ${day.is_rest_day ? "bg-muted" : "bg-accent"}`}></View>
                     </View>
                 ))}
-            </View>
-
-            <View className="start-workout">
-                <Pressable className="start-workout-button">
-                    <Text className="text-accent font-sans-bold text-lg">Start Workout</Text>
-                </Pressable>
-
-                <Pressable className="edit-workout-button"
-                    onPress={() => 
-                        router.push({
-                            pathname: "/workout/view-routine/[id]",
-                            params: {id : routineId}
-                        })
-                    }>
-
-                    <Image source={icons.edit} className="edit-workout-icon" />
-                </Pressable>
             </View>
         </View>
     )

@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session, joinedload, with_loader_criteria
 from app.auth import get_current_user
 from app.database import get_db
 from app.models.routine import Routine, RoutineDay, RoutineExercise
-from app.schemas.routine import RoutineResponse
 from app.schemas.routine import RoutineCreate, RoutineResponse
 from app.models.exercise import Exercise
 
@@ -162,4 +161,32 @@ def create_routine(
             detail=str(e)
         )
     
+
+
+
+@router.get("/{routine_id}", response_model=RoutineResponse)
+def get_routine(routine_id: str, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    
+    routine = db.query(Routine).options(
+        joinedload(Routine.days)
+        .joinedload(RoutineDay.exercises)
+        .joinedload(RoutineExercise.exercise),
         
+        with_loader_criteria(
+            RoutineDay,
+            RoutineDay.is_deleted.is_(False),
+            include_aliases=True
+        )
+    ).filter(
+        Routine.user_id == str(current_user.id),
+        Routine.is_deleted.is_(False),
+        Routine.id == routine_id
+    ).first()
+    
+    if routine is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Routine with ID {routine_id} not found."
+        )
+    
+    return routine

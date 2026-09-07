@@ -2,20 +2,25 @@
 import Dropdown from "@/components/DropDown";
 import { icons } from "@/constants/icons";
 import { useAuth } from "@/context/AuthContext";
-import { getExercises } from "@/services/exerciseService";
+import { createExercise, getExercises } from "@/services/exerciseService";
+import type { ExerciseItem } from "@/types/exercise";
+import { TrackingType } from "@/types/exercise";
+import type { DayKey, RoutineExercise } from "@/types/routine";
 import { router, useLocalSearchParams } from "expo-router";
 import { styled } from "nativewind";
 import { useEffect, useState } from "react";
 import { FlatList, Image, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
-import { DayKey, useRoutineStore } from "../../../store/routineStore";
-
+import { useRoutineStore } from "../../../store/routineStore";
 const SafeAreaView = styled(RNSafeAreaView);
 
 const DEFAULT_SETS = 3;
 const DEFAULT_REPS = 10;
+const DEFAULT_DURATION_SECONDS = 60;
 const MIN_SETS = 1;
 const MIN_REPS = 1;
+const MIN_DURATION_SECONDS = 5;
+const DURATION_STEP = 5;
 // const MUSCLE_GROUPS = ["All", "Chest", "Shoulders", "Biceps", "Triceps", "Legs", "Back"];
 
 
@@ -28,7 +33,7 @@ export default function DayInputForm() {
 
 
   const { day } = useLocalSearchParams<{ day: DayKey }>();
-  const {session} = useAuth();
+  const { session } = useAuth();
   const dayData = useRoutineStore((s) => s.days[day]);
   const updateDay = useRoutineStore((s) => s.updateDay);
 
@@ -40,7 +45,7 @@ export default function DayInputForm() {
   useEffect(() => {
     const fetchExercises = async () => {
       try {
-        const data = await getExercises(session?.accessToken  || "");
+        const data = await getExercises(session?.accessToken || "");
         setExercises(data);
       } catch (error) {
         console.error("Error fetching exercises:", error);
@@ -72,10 +77,12 @@ export default function DayInputForm() {
   const [newExerciseMuscleGroup, setNewExerciseMuscleGroup] = useState<string | null>(null);
   const [newExerciseSets, setNewExerciseSets] = useState<number>(DEFAULT_SETS);
   const [newExerciseReps, setNewExerciseReps] = useState<number>(DEFAULT_REPS);
+  const [newExerciseTrackingType, setNewExerciseTrackingType] = useState<TrackingType>("reps");
+  const [newExerciseDuration, setNewExerciseDuration] = useState<number>(DEFAULT_DURATION_SECONDS);
 
   const MUSCLE_GROUPS = [
     "All",
-    ...new Set(exercises.map((exercise) => exercise.muscleGroup)),
+    ...new Set(exercises.map((exercise) => exercise.muscleGroup).filter((group): group is string => group !== null)),
   ];
 
   const handleGroupChange = (group: string) => {
@@ -84,13 +91,29 @@ export default function DayInputForm() {
 
   const normalizeExercise = (
     exercise: ExerciseItem
-  ): RoutineExercise => ({
-    id: exercise.id,
-    name: exercise.name,
-    muscleGroup: exercise.muscleGroup,
-    sets: DEFAULT_SETS,
-    reps: DEFAULT_REPS,
-  });
+  ): RoutineExercise => {
+
+    if (exercise.trackingType === "duration" || exercise.trackingType === "duration_weight") {
+      return {
+        id: exercise.id,
+        name: exercise.name,
+        muscleGroup: exercise.muscleGroup,
+        trackingType: exercise.trackingType,
+        sets: DEFAULT_SETS,
+        durationSeconds: DEFAULT_DURATION_SECONDS
+      }
+    }
+    return {
+      id: exercise.id,
+      name: exercise.name,
+      muscleGroup: exercise.muscleGroup,
+      trackingType: exercise.trackingType,
+      sets: DEFAULT_SETS,
+      reps: DEFAULT_REPS
+    }
+
+
+  }
 
   const toggleExercise = (exercise: ExerciseItem) => {
     const exercises = selectedExercises.some(
@@ -103,45 +126,146 @@ export default function DayInputForm() {
 
     updateDay(day, { exercises });
   };
-  const updateExerciseCounter = (id: string, field: "sets" | "reps", delta: number) => {
-    const min = field === "sets" ? MIN_SETS : MIN_REPS;
 
+  const updateSets = (id: string, delta: number) => {
     const exercises = selectedExercises.map((exercise) => {
       if (exercise.id !== id) return exercise;
 
-      const nextValue = exercise[field] + delta;
       return {
         ...exercise,
-        [field]: Math.max(
-          field === "sets" ? MIN_SETS : MIN_REPS,
-          nextValue
-        ),
-      };
-    });
+        sets: Math.max(MIN_SETS, exercise.sets + delta),
+      }
+    })
 
     updateDay(day, { exercises });
-  };
+  }
 
-  const addNewExercise = () => {
+  const updateReps = (id: string, delta: number) => {
+    const exercises = selectedExercises.map((exercise) => {
+      if (exercise.id !== id) return exercise;
+
+      if (
+        exercise.trackingType !== "reps" && exercise.trackingType !== "reps_weight"
+      ) {
+        return exercise;
+      }
+
+      return {
+        ...exercise,
+        reps: Math.max(MIN_REPS, exercise.reps + delta)
+      }
+    })
+
+    updateDay(day, { exercises });
+  }
+
+  const updateDuration = (id: string, delta: number) => {
+    const exercises = selectedExercises.map((exercise) => {
+      if (exercise.id !== id) return exercise;
+
+      if (
+        exercise.trackingType !== "duration" && exercise.trackingType !== "duration_weight"
+      ) return exercise;
+
+      return {
+        ...exercise,
+        durationSeconds: Math.max(MIN_DURATION_SECONDS, exercise.durationSeconds + delta)
+      }
+    })
+
+    updateDay(day, { exercises });
+  }
+
+  // const updateExerciseCounter = (id: string, field: "sets" | "reps", delta: number) => {
+  //   const min = field === "sets" ? MIN_SETS : MIN_REPS;
+
+  //   const exercises = selectedExercises.map((exercise) => {
+  //     if (exercise.id !== id) return exercise;
+
+  //     const nextValue = exercise[field] + delta;
+  //     return {
+  //       ...exercise,
+  //       [field]: Math.max(
+  //         field === "sets" ? MIN_SETS : MIN_REPS,
+  //         nextValue
+  //       ),
+  //     };
+  //   });
+
+  //   updateDay(day, { exercises });
+  // };
+
+  const addNewExercise = async () => {
     const name = newExerciseName.trim();
-    if (!name || !newExerciseMuscleGroup || selectedExercises.some((exercise) => exercise.name === name)) return;
 
-    updateDay(day, {
-      exercises: [...selectedExercises, { id: `custom-${Date.now()}`, name: name, muscleGroup: newExerciseMuscleGroup, sets: newExerciseSets, reps: newExerciseReps }],
-    });
-    setNewExerciseName("");
-    setNewExerciseMuscleGroup(null);
-    setNewExerciseSets(DEFAULT_SETS);
-    setNewExerciseReps(DEFAULT_REPS);
+    if (!name || !newExerciseMuscleGroup || selectedExercises.some((exercise) => exercise.name.toLowerCase() === name.toLowerCase())) {
+      return;
+    }
+
+    try {
+      const createdExercise = await createExercise(
+        {
+          name,
+          description: null,
+          primary_muscle: newExerciseMuscleGroup,
+          equipment: null,
+          tracking_type: newExerciseTrackingType as TrackingType,
+        },
+        session?.accessToken || ""
+      );
+
+      let routineExercise: RoutineExercise;
+
+      if (
+        createdExercise.trackingType === "duration" ||
+        createdExercise.trackingType === "duration_weight"
+      ) {
+        routineExercise = {
+          id: createdExercise.id,
+          name: createdExercise.name,
+          muscleGroup: createdExercise.muscleGroup,
+          trackingType: createdExercise.trackingType,
+
+          sets: newExerciseSets,
+          durationSeconds: newExerciseDuration,
+        }
+      } else {
+        routineExercise = {
+          id: createdExercise.id,
+          name: createdExercise.name,
+          muscleGroup: createdExercise.muscleGroup,
+          trackingType: createdExercise.trackingType,
+          sets: newExerciseSets,
+          reps: newExerciseReps,
+        }
+      }
+
+      updateDay(day, {
+        exercises: [...selectedExercises, routineExercise]
+      })
+
+      setExercises((prev) => [
+        ...prev,
+        createdExercise,
+      ])
+
+      setNewExerciseName("");
+      setNewExerciseMuscleGroup(null);
+      setNewExerciseTrackingType("reps_weight");
+      setNewExerciseSets(DEFAULT_SETS);
+      setNewExerciseReps(DEFAULT_REPS);
+      setNewExerciseDuration(DEFAULT_DURATION_SECONDS);
+    } catch (error) {
+      console.error("Error creating exercise:", error);
+    };
   };
 
   const handleSave = () => {
-    const normalizedExercises = selectedExercises.map(normalizeExercise);
-    const muscleGroups = [...new Set(normalizedExercises.map((exercise) => exercise.muscleGroup).filter(Boolean))];
-    const isRestDay = normalizedExercises.length === 0;
+    const muscleGroups = [...new Set(selectedExercises.map((exercise) => exercise.muscleGroup).filter(Boolean))];
+    const isRestDay = selectedExercises.length === 0;
 
     updateDay(day, {
-      exercises: normalizedExercises,
+      exercises: selectedExercises,
       configured: true,
       isRestDay,
       title: isRestDay ? undefined : muscleGroups.join(" + "),
@@ -223,14 +347,14 @@ export default function DayInputForm() {
                     <Text className="font-sans-semibold text-primary">Sets</Text>
                     <View className="flex-row items-center gap-1 w-30 justify-around">
                       <Pressable
-                        onPress={() => updateExerciseCounter(exercise.id, "sets", -1)}
+                        onPress={() => updateSets(exercise.id, -1)}
                         className="size-8 items-center justify-center"
                       >
                         <Text className="font-sans-bold text-accent text-lg">-</Text>
                       </Pressable>
                       <Text className="font-sans-bold text-accent text-lg px-3">{selectedExercise.sets}</Text>
                       <Pressable
-                        onPress={() => updateExerciseCounter(exercise.id, "sets", 1)}
+                        onPress={() => updateSets(exercise.id, 1)}
                         className="size-8 items-center justify-center"
                       >
                         <Text className="font-sans-bold text-accent text-lg">+</Text>
@@ -238,24 +362,71 @@ export default function DayInputForm() {
                     </View>
                   </View>
 
-                  <View className="flex-row items-center justify-between py-1">
-                    <Text className="font-sans-semibold text-primary">Reps</Text>
-                    <View className="flex-row items-center gap-1 w-30 justify-around">
-                      <Pressable
-                        onPress={() => updateExerciseCounter(exercise.name, "reps", -1)}
-                        className="size-8 items-center justify-center"
-                      >
-                        <Text className="font-sans-bold text-accent text-lg">-</Text>
-                      </Pressable>
-                      <Text className="font-sans-bold text-accent text-lg px-3">{selectedExercise.reps}</Text>
-                      <Pressable
-                        onPress={() => updateExerciseCounter(exercise.name, "reps", 1)}
-                        className="size-8 items-center justify-center"
-                      >
-                        <Text className="font-sans-bold text-accent text-lg">+</Text>
-                      </Pressable>
-                    </View>
-                  </View>
+                  {(
+                    selectedExercise.trackingType === "reps" ||
+                    selectedExercise.trackingType === "reps_weight"
+                  ) && (
+                      <View className="flex-row items-center justify-between py-1">
+                        <Text className="font-sans-semibold text-primary">
+                          Reps
+                        </Text>
+
+                        <View className="flex-row items-center gap-1 w-30 justify-around">
+                          <Pressable
+                            onPress={() => updateReps(exercise.id, -1)}
+                            className="size-8 items-center justify-center"
+                          >
+                            <Text className="font-sans-bold text-accent text-lg">-</Text>
+                          </Pressable>
+
+                          <Text className="font-sans-bold text-accent text-lg px-3">
+                            {selectedExercise.reps}
+                          </Text>
+
+                          <Pressable
+                            onPress={() => updateReps(exercise.id, 1)}
+                            className="size-8 items-center justify-center"
+                          >
+                            <Text className="font-sans-bold text-accent text-lg">+</Text>
+                          </Pressable>
+                        </View>
+                      </View>
+                    )}
+
+                  {(
+                    selectedExercise.trackingType === "duration" ||
+                    selectedExercise.trackingType === "duration_weight"
+                  ) && (
+                      <View className="flex-row items-center justify-between py-1">
+                        <Text className="font-sans-semibold text-primary">
+                          Duration
+                        </Text>
+
+                        <View className="flex-row items-center gap-1 w-30 justify-around">
+                          <Pressable
+                            onPress={() =>
+                              updateDuration(exercise.id, -DURATION_STEP)
+                            }
+                            className="size-8 items-center justify-center"
+                          >
+                            <Text className="font-sans-bold text-accent text-lg">-</Text>
+                          </Pressable>
+
+                          <Text className="font-sans-bold text-accent text-lg px-3">
+                            {selectedExercise.durationSeconds}s
+                          </Text>
+
+                          <Pressable
+                            onPress={() =>
+                              updateDuration(exercise.id, DURATION_STEP)
+                            }
+                            className="size-8 items-center justify-center"
+                          >
+                            <Text className="font-sans-bold text-accent text-lg">+</Text>
+                          </Pressable>
+                        </View>
+                      </View>
+                    )}
                 </View>)}
 
 
@@ -297,24 +468,106 @@ export default function DayInputForm() {
                 </View>
               </View>
 
-              <View className="flex-row items-center justify-between">
-                <Text className="font-sans-semibold text-primary">Reps</Text>
-                <View className="flex-row items-center gap-1 w-30 justify-around">
-                  <Pressable
-                    onPress={() => setNewExerciseReps((prev) => Math.max(MIN_REPS, prev - 1))}
-                    className="size-8 items-center justify-center"
-                  >
-                    <Text className="font-sans-bold text-accent text-lg">-</Text>
-                  </Pressable>
-                  <Text className="font-sans-bold text-accent text-lg px-3">{newExerciseReps}</Text>
-                  <Pressable
-                    onPress={() => setNewExerciseReps((prev) => prev + 1)}
-                    className="size-8 items-center justify-center"
-                  >
-                    <Text className="font-sans-bold text-accent text-lg">+</Text>
-                  </Pressable>
-                </View>
-              </View>
+              <Dropdown
+                options={[
+                  "reps",
+                  "reps_weight",
+                  "duration",
+                  "duration_weight",
+                ]}
+                value={newExerciseTrackingType}
+                onSelect={(value) =>
+                  setNewExerciseTrackingType(value as TrackingType)
+                }
+                placeholder="Select tracking type"
+              />
+
+              {(
+                newExerciseTrackingType === "reps" ||
+                newExerciseTrackingType === "reps_weight"
+              ) && (
+                  <View className="flex-row items-center justify-between">
+                    <Text className="font-sans-semibold text-primary">
+                      Reps
+                    </Text>
+
+                    <View className="flex-row items-center gap-1 w-30 justify-around">
+                      <Pressable
+                        onPress={() =>
+                          setNewExerciseReps((prev) =>
+                            Math.max(MIN_REPS, prev - 1)
+                          )
+                        }
+                        className="size-8 items-center justify-center"
+                      >
+                        <Text className="font-sans-bold text-accent text-lg">
+                          -
+                        </Text>
+                      </Pressable>
+
+                      <Text className="font-sans-bold text-accent text-lg px-3">
+                        {newExerciseReps}
+                      </Text>
+
+                      <Pressable
+                        onPress={() =>
+                          setNewExerciseReps((prev) => prev + 1)
+                        }
+                        className="size-8 items-center justify-center"
+                      >
+                        <Text className="font-sans-bold text-accent text-lg">
+                          +
+                        </Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                )}
+
+              {(
+                newExerciseTrackingType === "duration" ||
+                newExerciseTrackingType === "duration_weight"
+              ) && (
+                  <View className="flex-row items-center justify-between">
+                    <Text className="font-sans-semibold text-primary">
+                      Duration
+                    </Text>
+
+                    <View className="flex-row items-center gap-1 w-30 justify-around">
+                      <Pressable
+                        onPress={() =>
+                          setNewExerciseDuration((prev) =>
+                            Math.max(
+                              MIN_DURATION_SECONDS,
+                              prev - DURATION_STEP
+                            )
+                          )
+                        }
+                        className="size-8 items-center justify-center"
+                      >
+                        <Text className="font-sans-bold text-accent text-lg">
+                          -
+                        </Text>
+                      </Pressable>
+
+                      <Text className="font-sans-bold text-accent text-lg px-3">
+                        {newExerciseDuration}s
+                      </Text>
+
+                      <Pressable
+                        onPress={() =>
+                          setNewExerciseDuration(
+                            (prev) => prev + DURATION_STEP
+                          )
+                        }
+                        className="size-8 items-center justify-center"
+                      >
+                        <Text className="font-sans-bold text-accent text-lg">
+                          +
+                        </Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                )}
 
               <Pressable
                 onPress={addNewExercise}

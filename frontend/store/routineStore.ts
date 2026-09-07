@@ -1,13 +1,6 @@
 import { create } from "zustand";
 
-export type DayKey = "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday";
-
-export type DayRoutine = {
-  configured: boolean;
-  title?: string;       // e.g. "Chest + Triceps"
-  exercises: Exercise[];
-  isRestDay?: boolean;
-};
+import type { DayKey, DayRoutine } from "@/types/routine";
 
 type RoutineStore = {
   days: Record<DayKey, DayRoutine>;
@@ -15,12 +8,12 @@ type RoutineStore = {
   clearRoutine: () => void;
 };
 
-const emptyDay: DayRoutine = { configured: false, exercises: [] };
+const createEmptyDay = (): DayRoutine => ({ configured: false, exercises: [] });
 
 export const useRoutineStore = create<RoutineStore>((set) => ({
   days: {
-    monday: emptyDay, tuesday: emptyDay, wednesday: emptyDay,
-    thursday: emptyDay, friday: emptyDay, saturday: emptyDay, sunday: emptyDay,
+    monday: createEmptyDay(), tuesday: createEmptyDay(), wednesday: createEmptyDay(),
+    thursday: createEmptyDay(), friday: createEmptyDay(), saturday: createEmptyDay(), sunday: createEmptyDay(),
   },
   updateDay: (day, data) =>
     set((state) => ({
@@ -28,7 +21,7 @@ export const useRoutineStore = create<RoutineStore>((set) => ({
     })),
   clearRoutine: () =>
     set(() => ({
-      days: { monday: emptyDay, tuesday: emptyDay, wednesday: emptyDay,
-        thursday: emptyDay, friday: emptyDay, saturday: emptyDay, sunday: emptyDay },
+      days: { monday: createEmptyDay(), tuesday: createEmptyDay(), wednesday: createEmptyDay(),
+        thursday: createEmptyDay(), friday: createEmptyDay(), saturday: createEmptyDay(), sunday: createEmptyDay() },
       })),
 }));

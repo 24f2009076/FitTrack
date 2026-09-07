@@ -5,6 +5,8 @@ import adobe from "@/assets/icons/adobe.png";
 import backPrimary from "@/assets/icons/back-primary.png";
 import back from "@/assets/icons/back.png";
 import canva from "@/assets/icons/canva.png";
+import downArrowAccent from "@/assets/icons/chevron-down-accent.png";
+import downArrowPrimary from "@/assets/icons/chevron-down-primary.png";
 import claude from "@/assets/icons/claude.png";
 import coach from "@/assets/icons/coach.png";
 import dateAccent from "@/assets/icons/date-accent.png";
@@ -36,6 +38,7 @@ import spotify from "@/assets/icons/spotify.png";
 import squarePlusRegular from "@/assets/icons/square-plus-regular.png";
 import squarePlusSolid from "@/assets/icons/square-plus-solid.png";
 import streakBadge from "@/assets/icons/streak-badge.png";
+import trashMuted from "@/assets/icons/trash-can-muted.png";
 import trophy from "@/assets/icons/trophy.png";
 import wallet from "@/assets/icons/wallet.png";
 import workout from "@/assets/icons/workout.png";
@@ -82,7 +85,10 @@ export const icons = {
     editAccent,
     eyeAccent,
     eyeDark,
-    logout
+    logout,
+    trashMuted,
+    downArrowPrimary,
+    downArrowAccent
 } as const;
 
 export type IconKey = keyof typeof icons;

@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
-
+from app.service.exercise import create_custom_exercise
 from app.database import get_db
 from app.schemas.exercise import (
     ExerciseBulkCreate,
+    ExerciseCreate,
     ExerciseResponse,
 )
 from app.service.exercise import bulk_create_exercises, get_exercises
@@ -63,4 +64,21 @@ def list_exercises(
         primary_muscle=primary_muscle,
         limit=limit,
         offset=offset
+    )
+    
+    
+@router.post(
+    "",
+    response_model=ExerciseResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_exercise(
+    payload: ExerciseCreate,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return create_custom_exercise(
+        db=db,
+        exercise_data=payload,
+        user_id=str(current_user.id)
     )

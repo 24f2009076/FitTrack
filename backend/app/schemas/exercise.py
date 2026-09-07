@@ -43,7 +43,6 @@ class ExerciseCreate(BaseModel):
     primary_muscle: str | None = None
     equipment: str | None = None
     tracking_type: TrackingType = "reps_weight"
-    is_deleted: bool = False
 
     @field_validator("primary_muscle")
     @classmethod

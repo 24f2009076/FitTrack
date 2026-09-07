@@ -7,6 +7,7 @@ class ExerciseResponse(BaseModel):
     description: str | None
     primary_muscle: str | None
     equipment: str | None
+    tracking_type: str
 
 
 class RoutineExerciseResponse(BaseModel):
@@ -32,7 +33,6 @@ class RoutineDayResponse(BaseModel):
     
     class Config:
         from_attributes = True
-
 
 class RoutineResponse(BaseModel):
     id: str
