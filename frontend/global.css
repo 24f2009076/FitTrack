@@ -1,0 +1,317 @@
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css";
+
+@import "nativewind/theme";
+
+@theme {
+    --color-background: #fff9e3;
+    --color-foreground: #081126;
+    --color-card: #fff8e7;
+    --color-muted: #f6eecf;
+    --color-muted-foreground: rgba(0, 0, 0, 0.6);
+    --color-primary: #081126;
+    --color-accent: #ea7a53;
+    --color-border: rgba(0, 0, 0, 0.1);
+    --color-success: #16a34a;
+    --color-destructive: #dc2626;
+    --color-subscription: #8fd1bd;
+    --color-faded: #9CA3AF;
+
+    --spacing-0: 0px;
+    --spacing-1: 4px;
+    --spacing-2: 8px;
+    --spacing-3: 12px;
+    --spacing-4: 16px;
+    --spacing-5: 20px;
+    --spacing-6: 24px;
+    --spacing-7: 28px;
+    --spacing-8: 32px;
+    --spacing-9: 36px;
+    --spacing-10: 40px;
+    --spacing-11: 44px;
+    --spacing-12: 48px;
+    --spacing-14: 56px;
+    --spacing-16: 64px;
+    --spacing-18: 72px;
+    --spacing-20: 80px;
+    --spacing-24: 96px;
+    --spacing-30: 120px;
+
+    --font-sans: sans-regular;
+    --font-sans-light: sans-light;
+    --font-sans-medium: sans-medium;
+    --font-sans-semibold: sans-semibold;
+    --font-sans-bold: sans-bold;
+    --font-sans-extrabold: sans-extrabold;
+}
+
+@layer components {
+    .tabs-icon {
+        @apply size-12 items-center justify-center;
+    }
+
+    .tabs-pill {
+        @apply size-12 items-center justify-center rounded-full bg-transparent;
+    }
+
+    .tabs-active {
+        @apply bg-accent;
+    }
+
+    .tabs-glyph {
+        @apply size-6;
+    }
+
+    .home-navbar {
+        @apply mb-4 flex-row items-center justify-between border-b border-black/10 pb-2 shadow-sm;
+    }
+
+    .home-user {
+        @apply flex-row items-center;
+    }
+
+    .home-avatar {
+        @apply size-8 rounded-full;
+    }
+
+    .home-user-name {
+        @apply ml-2 text-xl font-sans-bold text-primary;
+    }
+
+    .text-date {
+        @apply font-sans-medium text-muted-foreground text-lg;
+    }
+
+    .home-title {
+        @apply my-3 flex-col;
+    }
+
+    .badge {
+        @apply flex-row items-center gap-2 rounded-full bg-accent/20 px-3 py-1 mr-2;
+    }
+
+    .badge-icon {
+        @apply size-4;
+    }
+
+    .badge-text {
+        @apply text-sm font-sans-medium text-primary;
+    }
+
+    .home-card {
+        @apply my-3 min-h-50 justify-between gap-5 rounded rounded-xl bg-muted py-5 px-3 shadow-lg;
+    }
+
+    .home-card-insight {
+        @apply my-3 min-h-50 justify-between gap-5 rounded rounded-xl bg-primary/90 py-5 px-3 shadow-lg;
+    }
+
+    .workout-card-title {
+        @apply self-start text-sm font-sans-bold text-white bg-accent px-3 py-1 rounded-full ;
+    }
+
+    .workout-card-name {
+        @apply mt-2 text-4xl font-sans-bold text-primary min-h-20;
+    }
+
+    .workout-detail {
+        @apply mr-3 flex-row items-center;
+    }
+
+    .workout-detail-text {
+        @apply text-sm font-sans-medium text-muted-foreground;
+    }
+
+    .workout-detail-icon {
+        @apply size-4 mr-1;
+    }
+
+    .workout-start-button {
+        @apply mt-4 items-center rounded-2xl bg-accent py-3;
+    }
+
+    .pr-icon {
+        @apply bg-accent/20 p-3 rounded-full justify-center;
+    }
+
+    .pr-text {
+        @apply flex-1 ml-3;
+    }
+
+    .weekly-chart-title {
+        @apply mb-3 text-xl font-sans-bold text-primary;
+    }
+
+    .tab-header {
+        @apply flex-1 flex justify-center items-center;
+    }
+
+    .page-header {
+        @apply flex-col items-start justify-center gap-2;
+    }
+
+    .head {
+        @apply text-2xl font-sans-bold text-primary;
+    }
+
+    .subhead {
+        @apply text-lg font-sans-medium text-muted-foreground;
+    }
+
+    .active-routine {
+        @apply my-3 min-h-50 rounded rounded-xl bg-accent/80 py-3 px-3 shadow-lg border-l-6 border-primary;
+    }
+
+    .active-routine-title {
+        @apply self-start text-2xl font-sans-bold text-white ;
+    }
+
+    .active-routine-icon {
+        @apply size-6 mr-2;
+    }
+
+    .active-routine-details {
+        @apply mr-3 flex-row items-center gap-4;
+    }
+
+    .section-header {
+        @apply mt-6 mb-2 flex-row items-center justify-between;
+    }
+
+    .section-title {
+        @apply text-lg font-sans-extrabold text-primary;
+    }
+
+    .start-workout {
+        @apply mt-4 items-center flex-row  border-t border-muted/20 pt-7 ;
+    }
+
+    .start-workout-button {
+        @apply rounded-2xl bg-muted py-3 px-6 flex-1 flex items-center justify-center;
+    }
+
+    .edit-workout-button {
+        @apply ml-4 rounded-2xl border border-muted py-3 px-6;
+    }
+
+    .edit-workout-icon {
+        @apply size-6;
+    }
+
+    .routine-card {
+        @apply my-3 rounded-xl bg-muted py-5 px-3 shadow-lg;
+    }
+
+    .routine-card-header {
+        @apply flex-row items-center justify-between border-b border-accent/20 pb-5;
+    }
+
+    .routine-card-title {
+        @apply text-2xl font-sans-bold text-primary;
+    }
+
+    .routine-card-icon {
+        @apply size-4;
+    }
+
+    .routine-card-button {
+        @apply items-center justify-center rounded-full bg-accent/20 p-3;
+    }
+
+    .add-routine-button {
+        @apply mt-4 items-center justify-center rounded-2xl border border-accent/20 py-3;
+    }
+
+
+    .form-field {
+        @apply flex gap-2;
+    }
+
+    .muscle-group-chip {
+        @apply self-start rounded-lg border border-accent/20 px-4 py-2;
+    }
+
+    .selected-muscle-group-chip {
+        @apply self-start rounded-lg border border-accent bg-accent/10 px-4 py-2;
+    }
+
+    .routine-card-header {
+        @apply flex-col items-start border-b border-accent/20 pb-5;
+    }
+
+    .routine-card-description {
+        @apply mt-3 flex-row flex-wrap gap-2;
+    }
+
+    .routine-tag {
+        @apply rounded-full bg-accent/15 px-3 py-1;
+    }
+
+    .routine-card-metrics {
+        @apply mt-4 w-full flex-row items-center justify-start gap-6;
+    }
+
+    .routine-card-metric {
+        @apply flex-row items-baseline gap-1;
+    }
+
+    .routine-card-metric-value {
+        @apply font-sans-semibold text-base text-muted-foreground;
+    }
+
+    .routine-card-metric-label {
+        @apply font-sans text-xs text-muted-foreground;
+    }
+
+    .routine-card-metric-divider {
+        @apply h-3 w-px bg-border;
+    }
+
+    .routine-card-footer {
+        @apply mt-4 flex-row items-center justify-between;
+    }
+
+    .routine-card-footer-label {
+        @apply font-sans-medium text-sm text-muted-foreground;
+    }
+
+    .routine-card-description {
+        @apply mt-2 text-sm font-sans-medium text-muted-foreground flex-row flex-wrap gap-2 w-full;
+    }
+
+    .routine-tag {
+        @apply text-sm font-sans-medium text-primary bg-accent/20 px-2 py-1 rounded-full;
+    }
+
+    .view-routine-buttons {
+        @apply items-center justify-center rounded-2xl py-3 px-6 flex-1 flex-row gap-2;
+    }
+
+    .view-routine-button-text {
+        @apply text-lg font-sans-bold  text-muted flex-1 text-center;
+    }
+
+    .weekly-schedule-view {
+        @apply flex-col gap-2;
+    }
+
+    .weekly-schedule-day {
+        @apply flex-1 items-center rounded-xl border border-accent/50 p-3 bg-white flex-row gap-2;
+    }
+
+    .week-day {
+        @apply bg-muted justify-center p-3 w-12 rounded-xl items-center;
+    }
+    
+    .weekly-schedule-day-name {
+        @apply font-sans-bold text-lg text-primary flex-1;
+    }
+    
+    .weekly-schedule-day-details {
+        @apply flex-row flex-1 px-3 items-center;
+    }
+}   
+
+
+    
