@@ -56,22 +56,22 @@ export const date = {
     date: "March 16, 2026",
 }
 
-export const routineLibrary: RoutineLibrary = {
-    routines: [
-        {
-            routineName: "Intermediate Routine",
-            daysOfWeek: 4,
-            numberOfExercises: 28,
-            tags: ["Hypertrophy", "Intermediate"]
-        },
-        {
-            routineName: "Advanced Routine",
-            daysOfWeek: 6,
-            numberOfExercises: 35,
-            tags: ["Hypertrophy", "Advanced"]
-        }
-    ]
-}
+// export const routineLibrary: RoutineLibrary = {
+//     routines: [
+//         {
+//             routineName: "Intermediate Routine",
+//             daysOfWeek: 4,
+//             numberOfExercises: 28,
+//             tags: ["Hypertrophy", "Intermediate"]
+//         },
+//         {
+//             routineName: "Advanced Routine",
+//             daysOfWeek: 6,
+//             numberOfExercises: 35,
+//             tags: ["Hypertrophy", "Advanced"]
+//         }
+//     ]
+// }
 
 const DEFAULT_REPS = 10;
 const DEFAULT_SETS = 3;

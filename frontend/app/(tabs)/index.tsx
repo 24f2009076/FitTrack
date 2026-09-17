@@ -1,6 +1,6 @@
 import Badge from "@/components/Badge";
 import WeeklyChart from "@/components/WeeklyChart";
-import { date, USER } from "@/constants/data";
+import { USER } from "@/constants/data";
 import { icons } from "@/constants/icons";
 import images from "@/constants/images";
 import { useAuth } from "@/context/AuthContext";
@@ -28,12 +28,17 @@ export default function App() {
   const { signOut, session } = useAuth();
   const [profile, setProfile] = useState<null | Profile>(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
+  const date = {
+    day: new Date().toLocaleDateString("en-US", { weekday: "long" }),
+    date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+  }
 
   useEffect(() => {
     if (!session) signOut();
+
     const fetchProfile = async () => {
       try {
-        // console.log("API URL:", process.env.EXPO_PUBLIC_API_URL);
+
         const response = await fetch(
           `${process.env.EXPO_PUBLIC_API_URL}/api/auth/profile`,
           {

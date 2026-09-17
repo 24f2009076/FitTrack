@@ -40,10 +40,10 @@ const AddRoutine = () => {
             routine
         );
 
-        console.log(
-            "Routine payload:",
-            JSON.stringify(payload, null, 2)
-        );
+        // console.log(
+        //     "Routine payload:",
+        //     JSON.stringify(payload, null, 2)
+        // );
 
         try {
             const createdRoutine = await createRoutine(
@@ -51,10 +51,10 @@ const AddRoutine = () => {
                 session?.accessToken || ""
             );
 
-            console.log(
-                "Routine created:",
-                createdRoutine
-            );
+            // console.log(
+            //     "Routine created:",
+            //     createdRoutine
+            // );
 
             useRoutineStore.getState().clearRoutine();
 

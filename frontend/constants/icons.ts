@@ -7,8 +7,12 @@ import back from "@/assets/icons/back.png";
 import canva from "@/assets/icons/canva.png";
 import downArrowAccent from "@/assets/icons/chevron-down-accent.png";
 import downArrowPrimary from "@/assets/icons/chevron-down-primary.png";
+import circleFaded from "@/assets/icons/circle-faded.png";
+import circleMuted from "@/assets/icons/circle-solid.png";
 import claude from "@/assets/icons/claude.png";
 import coach from "@/assets/icons/coach.png";
+import completedAccent from "@/assets/icons/completed-accent.png";
+import currentAccent from "@/assets/icons/current-accent.png";
 import dateAccent from "@/assets/icons/date-accent.png";
 import date from "@/assets/icons/days-of-week.png";
 import dropbox from "@/assets/icons/dropbox.png";
@@ -27,8 +31,10 @@ import levelBadge from "@/assets/icons/level-badge.png";
 import logout from "@/assets/icons/logout.png";
 import medium from "@/assets/icons/medium.png";
 import menu from "@/assets/icons/menu.png";
+import minus from "@/assets/icons/minus-solid.png";
 import notion from "@/assets/icons/notion.png";
 import openai from "@/assets/icons/openai.png";
+import playMuted from "@/assets/icons/play-solid.png";
 import plusAccent from "@/assets/icons/plus-accent.png";
 import profile from "@/assets/icons/profile.png";
 import progress from "@/assets/icons/progress.png";
@@ -37,6 +43,7 @@ import setting from "@/assets/icons/setting.png";
 import spotify from "@/assets/icons/spotify.png";
 import squarePlusRegular from "@/assets/icons/square-plus-regular.png";
 import squarePlusSolid from "@/assets/icons/square-plus-solid.png";
+import stopMuted from "@/assets/icons/stop-solid.png";
 import streakBadge from "@/assets/icons/streak-badge.png";
 import trashMuted from "@/assets/icons/trash-can-muted.png";
 import trophy from "@/assets/icons/trophy.png";
@@ -45,6 +52,7 @@ import workout from "@/assets/icons/workout.png";
 
 
 export const icons = {
+    minus,
     home,
     wallet,
     setting,
@@ -88,7 +96,13 @@ export const icons = {
     logout,
     trashMuted,
     downArrowPrimary,
-    downArrowAccent
+    downArrowAccent,
+    playMuted,
+    stopMuted,
+    currentAccent,
+    completedAccent,
+    circleFaded,
+    circleMuted,
 } as const;
 
 export type IconKey = keyof typeof icons;

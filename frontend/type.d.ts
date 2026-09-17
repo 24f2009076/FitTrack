@@ -100,6 +100,8 @@ declare global {
         durationSeconds?: number;
     }
 
+    
+
 }
 
 export { };

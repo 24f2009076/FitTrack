@@ -32,6 +32,7 @@ const WorkOut = () => {
     const tags = activeRoutine?.description?.split(",").map((tag) => tag.trim()) ?? [];
 
 
+
     useEffect(() => {
         if (!session) return;
 
