@@ -75,3 +75,15 @@ export interface CompleteSetResponse {
 
     next_exercise_id?: string | null;
 }
+
+
+export interface CurrentRoutineDay {
+    routine_id: string;
+    routine_day_id: string;
+    day_number: number;
+    name: string | null;
+    is_rest_day: boolean;
+    exercise_count: number;
+    in_progress_session_id: string | null;
+}
+

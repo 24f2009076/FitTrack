@@ -1,7 +1,8 @@
+import { CompleteSetPayload, CompleteSetResponse, CurrentRoutineDay, WorkoutSession } from "@/types/workout";
 
 
 export const startWorkout = async (
-    routineDayId: string,
+    routineId: string,
     accessToken: string
 ) => {
     const response = await fetch(
@@ -13,7 +14,7 @@ export const startWorkout = async (
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                routine_day_id: routineDayId,
+                routine_id: routineId,
             }),
         }
     );
@@ -66,7 +67,7 @@ export const abandonWorkout = async (
 
     const data = await response.json();
 
-    if(!response.ok) {
+    if (!response.ok) {
         throw new Error(
             typeof data.detail === "string"
                 ? data.detail
@@ -84,8 +85,8 @@ export const completeWorkoutSet = async (
     sessionExerciseId: string,
     payload: CompleteSetPayload,
     accessToken: string
-) : Promise<CompleteSetResponse> => {
-    
+): Promise<CompleteSetResponse> => {
+
     const response = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/api/workout-sessions/${sessionId}/exercises/${sessionExerciseId}/sets`,
         {
@@ -110,8 +111,6 @@ export const completeWorkoutSet = async (
 }
 
 
-import { CompleteSetPayload, CompleteSetResponse, WorkoutSession } from "@/types/workout";
-
 export const getWorkoutSession = async (
     sessionId: string,
     accessToken: string
@@ -132,6 +131,34 @@ export const getWorkoutSession = async (
             typeof data.detail === "string"
                 ? data.detail
                 : "Failed to fetch workout session"
+        );
+    }
+
+    return data;
+};
+
+
+export const getCurrentRoutineDay = async (
+    routineId: string,
+    accessToken: string
+): Promise<CurrentRoutineDay> => {
+    const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/workout-sessions/routine/${routineId}/current-day`,
+        {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            typeof data.detail === "string"
+                ? data.detail
+                : data.detail?.message ||
+                "Failed to load current workout"
         );
     }
 

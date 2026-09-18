@@ -1,11 +1,19 @@
 export type DayKey =
-    "monday" |
-    "tuesday" |
-    "wednesday" |
-    "thursday" |
-    "friday" |
-    "saturday" |
-    "sunday";
+    "day_1" |
+    "day_2" |
+    "day_3" |
+    "day_4" |
+    "day_5" |
+    "day_6" |
+    "day_7";
+// export type DayKey =
+//     "monday" |
+//     "tuesday" |
+//     "wednesday" |
+//     "thursday" |
+//     "friday" |
+//     "saturday" |
+//     "sunday";
 
 import { TrackingType } from "./exercise";
 

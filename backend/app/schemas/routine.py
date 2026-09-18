@@ -40,6 +40,7 @@ class RoutineResponse(BaseModel):
     description: Optional[str] = None
     is_active: bool
     is_deleted: bool
+    current_routine_day_id: Optional[str] = None
     days: list[RoutineDayResponse]
     
     class Config:

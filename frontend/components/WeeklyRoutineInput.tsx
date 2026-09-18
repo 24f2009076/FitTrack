@@ -1,11 +1,21 @@
 import { icons } from "@/constants/icons";
+import { DayKey } from "@/types/routine";
 import { router } from "expo-router";
 import React from "react";
 import { Image, Pressable, Text, View } from "react-native";
-import { DayKey, useRoutineStore } from "../store/routineStore";
+import { useRoutineStore } from "../store/routineStore";
 
 
-const DaysOfWeek: DayKey[] = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+const DaysOfWeek: DayKey[] = ["day_1", "day_2", "day_3", "day_4", "day_5", "day_6", "day_7"];
+const DayNames: Record<DayKey, string> = {
+  day_1: "Day 1",
+  day_2: "Day 2",
+  day_3: "Day 3",
+  day_4: "Day 4",
+  day_5: "Day 5",
+  day_6: "Day 6",
+  day_7: "Day 7",
+};
 
 export const WeeklyRoutineInput = ({ }) => {
   const { days } = useRoutineStore();
@@ -28,7 +38,7 @@ export const WeeklyRoutineInput = ({ }) => {
           >
             <View className="flex-col justify-between flex-1">
               <Text className="text-accent text-lg font-sans-bold uppercase">
-                {day}
+                {DayNames[day]}
               </Text>
               <Text className="text-primary text-sm font-sans-semibold mt-1">
                 {data.isRestDay

@@ -12,8 +12,8 @@ const createEmptyDay = (): DayRoutine => ({ configured: false, exercises: [] });
 
 export const useRoutineStore = create<RoutineStore>((set) => ({
   days: {
-    monday: createEmptyDay(), tuesday: createEmptyDay(), wednesday: createEmptyDay(),
-    thursday: createEmptyDay(), friday: createEmptyDay(), saturday: createEmptyDay(), sunday: createEmptyDay(),
+    day_1: createEmptyDay(), day_2: createEmptyDay(), day_3: createEmptyDay(),
+    day_4: createEmptyDay(), day_5: createEmptyDay(), day_6: createEmptyDay(), day_7: createEmptyDay(),
   },
   updateDay: (day, data) =>
     set((state) => ({
@@ -21,7 +21,7 @@ export const useRoutineStore = create<RoutineStore>((set) => ({
     })),
   clearRoutine: () =>
     set(() => ({
-      days: { monday: createEmptyDay(), tuesday: createEmptyDay(), wednesday: createEmptyDay(),
-        thursday: createEmptyDay(), friday: createEmptyDay(), saturday: createEmptyDay(), sunday: createEmptyDay() },
+    days: { day_1: createEmptyDay(), day_2: createEmptyDay(), day_3: createEmptyDay(),
+        day_4: createEmptyDay(), day_5: createEmptyDay(), day_6: createEmptyDay(), day_7: createEmptyDay() },
       })),
 }));

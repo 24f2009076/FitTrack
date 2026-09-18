@@ -1,21 +1,29 @@
 import type {
-    DayKey,
-    DayRoutine,
+  DayKey,
+  DayRoutine,
 } from "@/types/routine";
 
 import type {
-    RoutineCreateRequest,
-    RoutineExerciseCreateRequest,
+  RoutineCreateRequest,
+  RoutineExerciseCreateRequest,
 } from "@/types/routineApi";
 
 const DAY_TO_NUMBER: Record<DayKey, number> = {
-  sunday: 0,
-  monday: 1,
-  tuesday: 2,
-  wednesday: 3,
-  thursday: 4,
-  friday: 5,
-  saturday: 6,
+  day_1: 0,
+  day_2: 1,
+  day_3: 2,
+  day_4: 3,
+  day_5: 4,
+  day_6: 5,
+  day_7: 6,
+};
+
+const requirePositiveInteger = (value: number, field: string): number => {
+  if (!Number.isInteger(value) || value < 1) {
+    throw new Error(`${field} must be a positive integer.`);
+  }
+
+  return value;
 };
 
 const mapExercise = (
@@ -31,8 +39,8 @@ const mapExercise = (
       exercise_id: exercise.id,
       exercise_order: index + 1,
 
-      planned_sets: exercise.sets,
-      planned_reps: exercise.reps,
+      planned_sets: requirePositiveInteger(exercise.sets, "Sets"),
+      planned_reps: requirePositiveInteger(exercise.reps, "Reps"),
       planned_duration_seconds: null,
     };
   }
@@ -44,9 +52,12 @@ const mapExercise = (
       exercise_id: exercise.id,
       exercise_order: index + 1,
 
-      planned_sets: null,
+      planned_sets: requirePositiveInteger(exercise.sets, "Sets"),
       planned_reps: null,
-      planned_duration_seconds: exercise.durationSeconds,
+      planned_duration_seconds: requirePositiveInteger(
+        exercise.durationSeconds,
+        "Duration"
+      ),
     };
   }
 

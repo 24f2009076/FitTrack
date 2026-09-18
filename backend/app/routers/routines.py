@@ -65,6 +65,8 @@ def create_routine(
         db.add(routine)
         db.flush()
         
+        created_days : list[RoutineDay] = []
+        
         for day_data in data.days:
             
             day = RoutineDay(
@@ -77,6 +79,8 @@ def create_routine(
 
             db.add(day)
             db.flush()
+            
+            created_days.append(day)
             
             if day_data.is_rest_day and day_data.exercises:
                 raise HTTPException(
@@ -141,7 +145,20 @@ def create_routine(
                 )
                 
                 db.add(routine_exercise)
-                
+        
+        if not created_days:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="A routine must contain at least one day."
+            )
+        
+        
+        first_day = min(
+            created_days,
+            key=lambda day: (day.day_of_week + 6) % 7
+        )
+
+        routine.current_routine_day_id = first_day.id
             
 
         db.commit()

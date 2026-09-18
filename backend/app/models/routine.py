@@ -45,7 +45,18 @@ class Routine(Base):
     days: Mapped[list["RoutineDay"]] = relationship(
         "RoutineDay",
         back_populates="routine",
-        order_by="RoutineDay.day_of_week"
+        order_by="RoutineDay.day_of_week",
+        foreign_keys="RoutineDay.routine_id"
+    )
+    
+    current_routine_day_id: Mapped[str | None] = mapped_column(
+        UUID(as_uuid=False),
+        ForeignKey(
+            "routine_days.id",
+            name="routines_current_routine_day_id_fkey",
+            ondelete="SET NULL"
+        ),
+        nullable=True
     )
 
 
@@ -89,7 +100,8 @@ class RoutineDay(Base):
     
     routine: Mapped["Routine"] = relationship(
         "Routine",
-        back_populates="days"
+        back_populates="days",
+        foreign_keys=[routine_id]
     )
     
     exercises: Mapped[list["RoutineExercise"]] = relationship(
@@ -159,5 +171,4 @@ class RoutineExercise(Base):
 
     @reps.setter
     def reps(self, value: int | None) -> None:
-        self.rep_min = value
-        self.rep_max = value
+        self.planned_reps = value

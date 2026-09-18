@@ -47,21 +47,25 @@ def start_workout(
         )
 
     # --------------------------------
-    # 2. Find requested routine day
+    # 2. Select current routine day
     # --------------------------------
+
+    routine, selected_day = get_current_routine_day(
+        db=db,
+        routine_id=data.routine_id,
+        user_id=str(current_user.id)
+    )
 
     routine_day = (
         db.query(RoutineDay)
-        .join(Routine)
         .options(
             joinedload(RoutineDay.exercises)
             .joinedload(RoutineExercise.exercise)
         )
         .filter(
-            RoutineDay.id == data.routine_day_id,
-            Routine.user_id == current_user.id,
-            Routine.is_deleted == False,
-            RoutineDay.is_deleted == False
+            RoutineDay.id ==selected_day.id,
+            RoutineDay.routine_id == routine.id,
+            RoutineDay.is_deleted.is_(False)
         )
         .first()
     )
@@ -167,29 +171,6 @@ def get_workout_session(
     current_user=Depends(get_current_user)
 ):
     
-    # debug_exercises = (
-    #     db.query(WorkoutSessionExercise)
-    #     .filter(
-    #         WorkoutSessionExercise.workout_session_id == session_id
-    #     )
-    #     .order_by(WorkoutSessionExercise.exercise_order)
-    #     .all()
-    # )
-
-    # print("DIRECT QUERY COUNT:", len(debug_exercises))
-
-    # for exercise in debug_exercises:
-    #     print(
-    #         exercise.exercise_order,
-    #         exercise.exercise_name,
-    #         exercise.status
-    #     )
-
-    # print(
-    #     "RELATIONSHIP COUNT:",
-    #     len(session.session_exercises)
-    # )
-    
     session = (
         db.query(WorkoutSession)
         .options(
@@ -226,7 +207,8 @@ def get_workout_session(
             WorkoutSession.routine_day_id == session.routine_day_id,
             WorkoutSession.is_deleted == False,
             WorkoutSession.status == "completed",
-            WorkoutSession.id != session.id
+            WorkoutSession.id != session.id,
+            WorkoutSession.completed_at < session.started_at
         )
         .order_by(WorkoutSession.completed_at.desc())
         .first()
@@ -339,6 +321,7 @@ def abandon_workout(
             WorkoutSession.user_id == current_user.id,
             WorkoutSession.is_deleted == False
         )
+        .with_for_update()
         .first()
     )
 
@@ -383,6 +366,7 @@ def complete_workout_set(
             WorkoutSession.is_deleted == False,
             WorkoutSession.status == "in_progress"
         )
+        .with_for_update()
         .first()
     )
     
@@ -536,6 +520,62 @@ def complete_workout_set(
     else:
         session.status = "completed"
         session.completed_at = datetime.now(timezone.utc)
+
+        # Find the routine this session belongs to.
+        completed_day = (
+            db.query(RoutineDay)
+            .filter(RoutineDay.id == session.routine_day_id)
+            .first()
+        )
+
+        routine = None
+
+        if completed_day is not None:
+            routine = (
+                db.query(Routine)
+                .filter(
+                    Routine.id == completed_day.routine_id,
+                    Routine.user_id == current_user.id,
+                    Routine.is_deleted.is_(False)
+                )
+                .with_for_update()
+                .first()
+            )
+
+        # Only advance if this session completed the current position.
+        # A repeat of an earlier day should leave progress unchanged.
+        if (
+            routine is not None
+            and routine.current_routine_day_id == session.routine_day_id
+        ):
+            routine_days = (
+                db.query(RoutineDay)
+                .filter(
+                    RoutineDay.routine_id == routine.id,
+                    RoutineDay.is_deleted.is_(False)
+                )
+                .all()
+            )
+
+            # Monday-first ordering: 1, 2, 3, 4, 5, 6, 0.
+            ordered_days = sorted(
+                routine_days,
+                key=lambda day: (day.day_of_week + 6) % 7
+            )
+
+            current_index = next(
+                (
+                    index
+                    for index, day in enumerate(ordered_days)
+                    if day.id == session.routine_day_id
+                ),
+                None
+            )
+
+            if current_index is not None:
+                next_index = (current_index + 1) % len(ordered_days)
+                routine.current_routine_day_id = ordered_days[next_index].id
+
     
     db.commit()
     
@@ -561,6 +601,247 @@ def complete_workout_set(
             else None
         ),
     }
+    
+    
+
+def get_current_routine_day(
+    db: Session,
+    routine_id: str,
+    user_id: str
+) -> tuple[Routine, RoutineDay]:
+    routine = (
+        db.query(Routine)
+        .filter(
+            Routine.id == routine_id,
+            Routine.user_id == user_id,
+            Routine.is_deleted.is_(False)
+        )
+        .with_for_update()
+        .first()
+    )
+
+    if routine is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Routine not found"
+        )
+
+    routine_days = (
+        db.query(RoutineDay)
+        .filter(
+            RoutineDay.routine_id == routine.id,
+            RoutineDay.is_deleted.is_(False)
+        )
+        .all()
+    )
+
+    ordered_days = sorted(
+        routine_days,
+        key=lambda day: (day.day_of_week + 6) % 7
+    )
+
+    if not ordered_days:
+        raise HTTPException(
+            status_code=400,
+            detail="This routine has no days"
+        )
+
+    day_ids = [day.id for day in ordered_days]
+
+    if routine.current_routine_day_id is None:
+        previous_session = (
+            db.query(WorkoutSession)
+            .join(
+                RoutineDay,
+                WorkoutSession.routine_day_id == RoutineDay.id
+            )
+            .filter(
+                RoutineDay.routine_id == routine.id,
+                WorkoutSession.user_id == user_id,
+                WorkoutSession.status == "completed",
+                WorkoutSession.is_deleted.is_(False)
+            )
+            .order_by(
+                WorkoutSession.completed_at.desc(),
+                WorkoutSession.id.desc()
+            )
+            .first()
+        )
+
+        if (
+            previous_session is not None
+            and previous_session.routine_day_id in day_ids
+        ):
+            previous_index = day_ids.index(
+                previous_session.routine_day_id
+            )
+            next_index = (previous_index + 1) % len(day_ids)
+
+            routine.current_routine_day_id = day_ids[next_index]
+        else:
+            routine.current_routine_day_id = day_ids[0]
+
+    elif routine.current_routine_day_id not in day_ids:
+        # The previously selected day has been removed.
+        routine.current_routine_day_id = day_ids[0]
+
+    current_day = next(
+        day
+        for day in ordered_days
+        if day.id == routine.current_routine_day_id
+    )
+
+    return routine, current_day    
+
+
+@router.get("/routine/{routine_id}/current-day")
+def preview_current_routine_day(
+    routine_id: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    try:
+        routine, routine_day = get_current_routine_day(
+            db=db,
+            routine_id=routine_id,
+            user_id=str(current_user.id)
+        )
+
+        existing_session = (
+            db.query(WorkoutSession)
+            .filter(
+                WorkoutSession.user_id == str(current_user.id),
+                WorkoutSession.status == "in_progress",
+                WorkoutSession.is_deleted.is_(False)
+            )
+            .first()
+        )
+
+        result = {
+            "routine_id": routine.id,
+            "routine_day_id": routine_day.id,
+            "day_number": (
+                (routine_day.day_of_week + 6) % 7
+            ) + 1,
+            "name": routine_day.name,
+            "is_rest_day": routine_day.is_rest_day,
+            "exercise_count": len(routine_day.exercises),
+            "in_progress_session_id": (
+                existing_session.id
+                if existing_session is not None
+                else None
+            )
+        }
+
+        db.commit()
+        return result
+
+    except Exception:
+        db.rollback()
+        raise
+    
+    
+    
+
+@router.patch("/routine/{routine_id}/skip-rest-day")
+def skip_rest_day(
+    routine_id: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    try:
+        routine, current_day = get_current_routine_day(
+            db=db,
+            routine_id=routine_id,
+            user_id=str(current_user.id)
+        )
+
+        if not current_day.is_rest_day:
+            raise HTTPException(
+                status_code=400,
+                detail="The current routine day is not a rest day"
+            )
+
+        existing_session = (
+            db.query(WorkoutSession)
+            .filter(
+                WorkoutSession.user_id == str(current_user.id),
+                WorkoutSession.status == "in_progress",
+                WorkoutSession.is_deleted.is_(False)
+            )
+            .first()
+        )
+
+        if existing_session is not None:
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    "Finish or abandon your current workout "
+                    "before skipping a rest day"
+                )
+            )
+
+        routine_days = (
+            db.query(RoutineDay)
+            .filter(
+                RoutineDay.routine_id == routine.id,
+                RoutineDay.is_deleted.is_(False)
+            )
+            .all()
+        )
+
+        ordered_days = sorted(
+            routine_days,
+            key=lambda day: (day.day_of_week + 6) % 7
+        )
+
+        current_index = next(
+            (
+                index
+                for index, day in enumerate(ordered_days)
+                if day.id == current_day.id
+            ),
+            None
+        )
+
+        if current_index is None:
+            raise HTTPException(
+                status_code=400,
+                detail="Current routine day is no longer available"
+            )
+
+        next_index = (current_index + 1) % len(ordered_days)
+        next_day = ordered_days[next_index]
+
+        routine.current_routine_day_id = next_day.id
+
+        result = {
+            "routine_id": routine.id,
+            "routine_day_id": next_day.id,
+            "day_number": (
+                (next_day.day_of_week + 6) % 7
+            ) + 1,
+            "name": next_day.name,
+            "is_rest_day": next_day.is_rest_day,
+            "exercise_count": len(next_day.exercises),
+            "in_progress_session_id": None
+        }
+
+        db.commit()
+
+        return result
+
+    except Exception:
+        db.rollback()
+        raise
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     

@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 
 class WorkoutStartRequest(BaseModel):
-    routine_day_id: str
+    routine_id: str
 
 
 class WorkoutSetCreate(BaseModel):

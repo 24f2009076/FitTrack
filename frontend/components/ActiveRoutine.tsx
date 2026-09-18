@@ -1,12 +1,12 @@
 import { icons } from "@/constants/icons";
 import { useAuth } from "@/context/AuthContext";
-import { abandonWorkout, getWorkoutSession, startWorkout } from "@/services/workoutService";
-import { DayRoutineResponse } from "@/types/routine";
-import { WorkoutSession } from "@/types/workout";
+import { skipRestDay } from "@/services/routineService";
+import { abandonWorkout, getCurrentRoutineDay, getWorkoutSession, startWorkout } from "@/services/workoutService";
+import { CurrentRoutineDay, WorkoutSession } from "@/types/workout";
 import { BlurView } from "expo-blur";
-import { router } from "expo-router";
-import { useState } from "react";
-import { Image, Modal, Pressable, Text, View } from "react-native";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
+import { Alert, Image, Modal, Pressable, Text, View } from "react-native";
 
 const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, tags, days }: ActiveRoutineProps) => {
 
@@ -32,30 +32,10 @@ const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, 
         return `${hours.toString().padStart(2, '0')} hours ${minutes.toString().padStart(2, '0')} mins ago`;
     }
 
-    const dayMap: { [key: number]: string } = {
-        0: "S",
-        1: "M",
-        2: "T",
-        3: "W",
-        4: "T",
-        5: "F",
-        6: "S"
-    }
-
-    const longDayMap: { [key: number]: string } = {
-        0: "Sunday",
-        1: "Monday",
-        2: "Tuesday",
-        3: "Wednesday",
-        4: "Thursday",
-        5: "Friday",
-        6: "Saturday"
-    }
-
-    const today = new Date().getDay();
-
-    const todayRoutineDay = days.find(
-        (day) => day.day_of_week === today
+    const orderedDays = [...days].sort(
+        (a, b) =>
+            ((a.day_of_week + 6) % 7) -
+            ((b.day_of_week + 6) % 7)
     );
 
     const handleResumeWorkout = () => {
@@ -74,21 +54,63 @@ const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, 
         });
     };
 
+    const startAndOpenWorkout = async (accessToken: string) => {
+        const result = await startWorkout(routineId, accessToken);
+
+        if (result.conflict) {
+            if (!result.existingSessionId) {
+                throw new Error("An existing workout session was not returned.");
+            }
+
+            const existingSession = await getWorkoutSession(
+                result.existingSessionId,
+                accessToken
+            );
+
+            setActiveWorkoutSession(existingSession);
+            setShowModal(true);
+            return;
+        }
+
+        if (!result.id) {
+            throw new Error("The server did not return a workout session.");
+        }
+
+        setShowModal(false);
+
+        router.push({
+            pathname: "/workout/session/[id]",
+            params: { id: result.id },
+        });
+    };
+
+    const handleStartWorkout = async () => {
+        if (!session?.accessToken || isStarting) return;
+
+        setIsStarting(true);
+
+        try {
+            await startAndOpenWorkout(session.accessToken);
+        } catch (error) {
+            Alert.alert(
+                "Unable to start workout",
+                error instanceof Error ? error.message : "Please try again."
+            );
+        } finally {
+            setIsStarting(false);
+        }
+    };
+
     const handelStartNewWorkout = async () => {
-        if (!session?.accessToken) {
-            console.error("No access token available. User might not be authenticated.");
+        if (
+            !session?.accessToken ||
+            !activeWorkoutSession ||
+            isStarting
+        ) {
             return;
         }
 
-        if (!todayRoutineDay) {
-            console.error("No routine day found for today.");
-            return;
-        }
-
-        if (!activeWorkoutSession) {
-            console.error("No active workout session available.");
-            return;
-        }
+        setIsStarting(true);
 
         try {
             await abandonWorkout(
@@ -96,82 +118,58 @@ const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, 
                 session.accessToken
             );
 
-            const newWorkout = await startWorkout(
-                todayRoutineDay.id,
+            // The previous session has now been abandoned.
+            setActiveWorkoutSession(undefined);
+            setShowModal(false);
+
+            await startAndOpenWorkout(session.accessToken);
+        } catch (error) {
+            Alert.alert(
+                "Unable to start new workout",
+                error instanceof Error ? error.message : "Please try again."
+            );
+        } finally {
+            setIsStarting(false);
+        }
+    };
+
+    const handleSkipRestDay = async () => {
+        if (
+            !session?.accessToken ||
+            !currentDay?.is_rest_day ||
+            isSkippingRestDay
+        ) {
+            return;
+        }
+
+        setIsSkippingRestDay(true);
+
+        try {
+            const nextDay = await skipRestDay(
+                routineId,
                 session.accessToken
             );
 
-            setShowModal(false);
-
-            router.push({
-                pathname: "/workout/session/[id]",
-                params: {
-                    id: newWorkout.id
-                }
-            })
+            setCurrentDay(nextDay);
         } catch (error) {
-            console.error("Error starting new workout session:", error);
+            Alert.alert(
+                "Unable to skip rest day",
+                error instanceof Error
+                    ? error.message
+                    : "Please try again."
+            );
+        } finally {
+            setIsSkippingRestDay(false);
         }
+    };
 
-        
-    }
-
-
-    const handleStartWorkout = async (
-        todayRoutineDay: DayRoutineResponse | undefined,
-        accessToken: string | undefined
-    ) => {
-
-        if (!accessToken) {
-            console.error('No access token available. User might not be authenticated.');
-            return;
-        }
-
-        if (!todayRoutineDay) {
-            console.error('No routine day found for today.');
-            return;
-        }
-
-        if (todayRoutineDay.is_rest_day) {
-            console.log('Today is a rest day. No workout session will be started.');
-            return;
-        }
-
-        try {
-            const workoutSession = await startWorkout(todayRoutineDay.id, accessToken);
-
-            if (workoutSession.conflict) {
-                const conflictSessionId = workoutSession.existingSessionId;
-
-                if (!conflictSessionId) {
-                    throw new Error("An existing workout session was not returned.");
-                }
-
-                setActiveWorkoutSession(
-                    await getWorkoutSession(
-                        conflictSessionId,
-                        accessToken
-                    ));
-
-                setShowModal(true);
-                return;
-            }
-
-            router.push({
-                pathname: "/workout/session/[id]",
-                params: {
-                    id: workoutSession.id
-                },
-            });
-        } catch (error) {
-            console.error('Error starting workout session:', error);
-        }
-
-    }
-
+    const [currentDay, setCurrentDay] = useState<CurrentRoutineDay>();
+    const [isLoadingCurrentDay, setIsLoadingCurrentDay] = useState(true);
+    const [currentDayError, setCurrentDayError] = useState<string>();
+    const [isSkippingRestDay, setIsSkippingRestDay] = useState(false);
 
     const [showModal, setShowModal] = useState(false);
-
+    const [isStarting, setIsStarting] = useState(false);
     const [activeWorkoutSession, setActiveWorkoutSession] = useState<WorkoutSession>();
 
     const { session } = useAuth();
@@ -179,6 +177,50 @@ const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, 
     if (!session) {
         return null;
     }
+
+    useFocusEffect(
+        useCallback(() => {
+            let isMounted = true;
+
+            const loadCurrentDay = async () => {
+                if (!session?.accessToken) {
+                    return;
+                }
+
+                setIsLoadingCurrentDay(true);
+                setCurrentDayError(undefined);
+
+                try {
+                    const result = await getCurrentRoutineDay(
+                        routineId,
+                        session.accessToken
+                    );
+
+                    if (isMounted) {
+                        setCurrentDay(result);
+                    }
+                } catch (error) {
+                    if (isMounted) {
+                        setCurrentDayError(
+                            error instanceof Error
+                                ? error.message
+                                : "Unable to load current workout"
+                        );
+                    }
+                } finally {
+                    if (isMounted) {
+                        setIsLoadingCurrentDay(false);
+                    }
+                }
+            };
+
+            loadCurrentDay();
+
+            return () => {
+                isMounted = false;
+            };
+        }, [routineId, session?.accessToken])
+    );
 
 
     return (
@@ -219,9 +261,7 @@ const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, 
                                     </View>
                                     <View>
                                         <Text className="font-sans-bold text-accent text-sm">
-                                            {todayRoutineDay
-                                                ? calculateDuration(activeWorkoutSession?.started_at)
-                                                : "Unknown"}
+                                            {calculateDuration(activeWorkoutSession?.started_at)}
                                         </Text>
                                     </View>
                                 </View>
@@ -246,13 +286,15 @@ const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, 
                             <View className="flex-row mt-5 gap-3">
                                 <Pressable
                                     className="bg-accent p-3 rounded-lg w-1/2 flex items-center justify-center"
-                                    onPress={() => handleResumeWorkout()}>
+                                    onPress={() => handleResumeWorkout()}
+                                    disabled={isStarting}>
                                     <Text className="text-muted font-sans-extrabold text-xl">Resume</Text>
                                 </Pressable>
 
                                 <Pressable
                                     className="bg-primary p-3 rounded-lg w-1/2 flex items-center justify-center"
-                                    onPress={() => handelStartNewWorkout()}>
+                                    onPress={() => handelStartNewWorkout()}
+                                    disabled={isStarting}>
                                     <Text className="text-muted font-sans-extrabold text-xl">Start New</Text>
                                 </Pressable>
                             </View>
@@ -271,7 +313,7 @@ const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, 
             <View className="active-routine-details mt-2">
                 <View className="flex-row items-center">
                     <Image source={icons.date} className="active-routine-icon" />
-                    <Text className="font-sans-bold text-muted text-md">{daysOfWeek} days/week</Text>
+                    <Text className="font-sans-bold text-muted text-md">{daysOfWeek} workout days</Text>
                 </View>
                 <View className="flex-row items-center">
                     <Image source={icons.exercisesMuted} className="active-routine-icon" />
@@ -279,28 +321,54 @@ const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, 
                 </View>
             </View>
 
-            <View className="flex-row flex-wrap gap-2 mt-5">
-                {tags.map((tag, index) => (
-                    <Text key={index} className="bg-muted text-accent text-sm font-sans-extrabold px-3 py-1 rounded-sm">
-                        {tag}
-                    </Text>
+            <View className={`flex-row items-center mt-5 bg-primary/90 justify-evenly rounded-2xl px-2`}>
+                {orderedDays.map((day) => (
+                    <View key={day.id} className="flex-col items-center gap-1 p-2">
+                        <Text className="font-sans-bold text-muted text-md">
+                            {`${((day.day_of_week + 6) % 7) + 1}`}
+                        </Text>
+                        <View
+                            className={`h-5 w-5 rounded-full 
+                                ${day.is_rest_day ? "bg-muted" : "bg-accent"}
+                                ${day.id === currentDay?.routine_day_id ? "border-5 border-green-700" : ""}`}
+                        />
+                    </View>
                 ))}
             </View>
 
-            <View className="flex-row items-center mt-5 bg-primary/90 justify-evenly rounded-2xl px-2">
-                {days.map((day, index) => (
-                    <View key={index} className="flex-col items-center gap-1 p-2">
-                        <Text className="font-sans-bold text-muted text-md">{dayMap[day.day_of_week]}</Text>
-                        <View className={`h-5 w-5 rounded-full ${day.is_rest_day ? "bg-muted" : "bg-accent"}`}></View>
-                    </View>
-                ))}
+            <View className="flex-col flex-wrap gap-2 mt-5 border-faded bg-primary/90 p-3 rounded-lg">
+                <Text className="font-sans-bold text-muted text-lg">Today's Workout</Text>
+                {(currentDay?.is_rest_day) && (
+                    <Text className="font-sans-bold text-accent text-md">
+                        Rest Day
+                    </Text>
+                )}
+                {(!currentDay?.is_rest_day) && (
+                    <Text className="font-sans-bold text-accent text-md">
+                        {currentDay?.name}
+                    </Text>
+                )}
             </View>
 
             <View className="start-workout">
                 <Pressable
                     className="start-workout-button"
-                    onPress={() => handleStartWorkout(todayRoutineDay, session.accessToken)}>
-                    <Text className="text-accent font-sans-bold text-lg">Start Workout</Text>
+                    onPress={currentDay?.is_rest_day
+                        ? handleSkipRestDay
+                        : handleStartWorkout}
+                    disabled={isStarting}
+                >
+
+                    {(currentDay?.is_rest_day) && (
+                        <Text className="text-accent font-sans-bold text-lg">
+                            Skip Rest Day
+                        </Text>
+                    )}
+                    {(!currentDay?.is_rest_day) && (
+                        <Text className="text-accent font-sans-bold text-lg">
+                            Start Workout
+                        </Text>
+                    )}
                 </Pressable>
 
                 <Pressable className="edit-workout-button"
