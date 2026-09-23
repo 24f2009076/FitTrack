@@ -579,8 +579,294 @@ def get_progress_overview(
 
 
 
+@router.get(
+    "/exercises",
+    response_model=list[ExerciseProgressItem],
+)
+def get_all_exercise_progress(
+    range: str = Query(default="30d"),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    start_date, end_date, _ = get_range_dates(range)
+
+    user_id = current_user.id
+
+    exercise_progress_query = (
+        db.query(
+            WorkoutSession.id.label("session_id"),
+            WorkoutSession.completed_at,
+
+            WorkoutSessionExercise.exercise_id,
+            WorkoutSessionExercise.tracking_type,
+
+            Exercise.name.label("exercise_name"),
+
+            WorkoutSet.reps,
+            WorkoutSet.weight_kg,
+            WorkoutSet.duration_seconds,
+        )
+        .join(
+            WorkoutSessionExercise,
+            WorkoutSet.workout_session_exercise_id
+            == WorkoutSessionExercise.id,
+        )
+        .join(
+            WorkoutSession,
+            WorkoutSessionExercise.workout_session_id
+            == WorkoutSession.id,
+        )
+        .join(
+            Exercise,
+            WorkoutSessionExercise.exercise_id
+            == Exercise.id,
+        )
+        .filter(
+            WorkoutSession.user_id == user_id,
+            WorkoutSession.status == "completed",
+            WorkoutSession.completed_at.isnot(None),
+        )
+    )
+
+    if start_date:
+        exercise_progress_query = exercise_progress_query.filter(
+            WorkoutSession.completed_at >= start_date
+        )
+
+    exercise_progress_rows = (
+        exercise_progress_query
+        .filter(
+            WorkoutSession.completed_at <= end_date
+        )
+        .order_by(
+            WorkoutSession.completed_at.asc()
+        )
+        .all()
+    )
+
+    exercise_sessions = {}
+
+    for row in exercise_progress_rows:
+
+        exercise_id = str(row.exercise_id)
+        session_id = str(row.session_id)
+
+        tracking_type = row.tracking_type
+
+        value = None
+        unit = None
+
+        if tracking_type == "reps_weight":
+            if row.weight_kg is not None:
+                value = float(row.weight_kg)
+                unit = "kg"
+
+        elif tracking_type == "reps":
+            if row.reps is not None:
+                value = float(row.reps)
+                unit = "reps"
+
+        elif tracking_type == "duration":
+            if row.duration_seconds is not None:
+                value = float(row.duration_seconds)
+                unit = "sec"
+
+        elif tracking_type == "duration_weight":
+            if row.weight_kg is not None:
+                value = float(row.weight_kg)
+                unit = "kg"
+
+        if value is None:
+            continue
+
+        if exercise_id not in exercise_sessions:
+            exercise_sessions[exercise_id] = {
+                "exercise_name": row.exercise_name,
+                "tracking_type": tracking_type,
+                "unit": unit,
+                "sessions": {},
+            }
+
+        sessions = exercise_sessions[exercise_id]["sessions"]
+
+        if session_id not in sessions:
+            sessions[session_id] = {
+                "completed_at": row.completed_at,
+                "value": value,
+            }
+
+        else:
+            sessions[session_id]["value"] = max(
+                sessions[session_id]["value"],
+                value,
+            )
+
+    exercise_progress = []
+
+    for exercise_id, data in exercise_sessions.items():
+
+        session_history = sorted(
+            data["sessions"].values(),
+            key=lambda item: item["completed_at"],
+        )
+
+        # Keep same behavior as overview:
+        # progress requires at least 2 completed sessions
+        if len(session_history) < 2:
+            continue
+
+        start_value = session_history[0]["value"]
+        current_value = session_history[-1]["value"]
+
+        change = current_value - start_value
+
+        if start_value > 0:
+            change_percent = round(
+                (change / start_value) * 100,
+                2,
+            )
+        else:
+            change_percent = None
+
+        history = [
+            ExerciseProgressHistoryPoint(
+                date=item["completed_at"],
+                value=round(item["value"], 2),
+            )
+            for item in session_history
+        ]
+
+        exercise_progress.append(
+            ExerciseProgressItem(
+                exercise_id=exercise_id,
+                exercise_name=data["exercise_name"],
+                tracking_type=data["tracking_type"],
+
+                start_value=round(start_value, 2),
+                current_value=round(current_value, 2),
+
+                change=round(change, 2),
+                change_percent=change_percent,
+
+                unit=data["unit"],
+
+                history=history,
+            )
+        )
+
+    exercise_progress.sort(
+        key=lambda item: (
+            item.change_percent
+            if item.change_percent is not None
+            else float("-inf")
+        ),
+        reverse=True,
+    )
+
+    return exercise_progress
 
 
+
+
+@router.get(
+    "/workouts",
+    response_model=list[RecentWorkout],
+)
+def get_all_recent_workouts(
+    range: str = Query(default="30d"),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    start_date, end_date, _ = get_range_dates(range)
+
+    user_id = current_user.id
+
+    recent_rows_query = (
+        db.query(
+            WorkoutSession.id.label("session_id"),
+            RoutineDay.name.label("workout_name"),
+            WorkoutSession.started_at,
+            WorkoutSession.completed_at,
+
+            func.count(
+                WorkoutSet.id
+            ).label("set_count"),
+
+            func.coalesce(
+                func.sum(
+                    WorkoutSet.reps * WorkoutSet.weight_kg
+                ),
+                0,
+            ).label("volume_kg"),
+        )
+        .join(
+            RoutineDay,
+            WorkoutSession.routine_day_id
+            == RoutineDay.id,
+        )
+        .outerjoin(
+            WorkoutSessionExercise,
+            WorkoutSessionExercise.workout_session_id
+            == WorkoutSession.id,
+        )
+        .outerjoin(
+            WorkoutSet,
+            WorkoutSet.workout_session_exercise_id
+            == WorkoutSessionExercise.id,
+        )
+        .filter(
+            WorkoutSession.user_id == user_id,
+            WorkoutSession.status == "completed",
+            WorkoutSession.completed_at.isnot(None),
+        )
+    )
+
+    if start_date:
+        recent_rows_query = recent_rows_query.filter(
+            WorkoutSession.completed_at >= start_date
+        )
+
+    recent_rows = (
+        recent_rows_query
+        .filter(
+            WorkoutSession.completed_at <= end_date
+        )
+        .group_by(
+            WorkoutSession.id,
+            RoutineDay.name,
+            WorkoutSession.started_at,
+            WorkoutSession.completed_at,
+        )
+        .order_by(
+            WorkoutSession.completed_at.desc()
+        )
+        # No .limit(3)
+        .all()
+    )
+
+    recent_workouts = []
+
+    for row in recent_rows:
+
+        duration_seconds = int(
+            (
+                row.completed_at
+                - row.started_at
+            ).total_seconds()
+        )
+
+        recent_workouts.append(
+            RecentWorkout(
+                session_id=str(row.session_id),
+                name=row.workout_name or "Workout",
+                completed_at=row.completed_at,
+                duration_seconds=duration_seconds,
+                set_count=row.set_count or 0,
+                volume_kg=float(row.volume_kg or 0),
+            )
+        )
+
+    return recent_workouts
 
 
 

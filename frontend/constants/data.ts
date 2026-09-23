@@ -5,7 +5,7 @@ export const tabs: AppTab[] = [
     { name: "workout", title: "Workout", icon: icons.workout },
     { name: "progress", title: "Progress", icon: icons.progress },
     { name: "coach", title: "Coach", icon: icons.coach },
-    { name: "profile", title: "Profile", icon: icons.profile },
+    // { name: "profile", title: "Profile", icon: icons.profile },
 ];
 
 export const USER = {

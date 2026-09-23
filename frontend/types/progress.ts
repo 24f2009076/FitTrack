@@ -44,3 +44,28 @@ export interface ProgressOverviewRequest {
     accessToken: string;
     range: ProgressRange;
 }
+
+export interface ExerciseOverviewResponse {
+    exercise_id: string;
+    exercise_name: string;
+    tracking_type: string;
+    start_value: number;
+    current_value: number;
+    change: number;
+    change_percent: number | null;
+    unit: string;
+    history: {
+        date: string;
+        value: number;
+
+    }
+}[];
+
+export interface WorkoutOverviewResponse {
+    session_id: string;
+    name: string;
+    completed_at: string;
+    duration_seconds: number;
+    set_count: number;
+    volume_kg: number;
+}[];

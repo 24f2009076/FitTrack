@@ -4,6 +4,7 @@ import { icons } from "@/constants/icons";
 import { useAuth } from "@/context/AuthContext";
 import { getProgressOverview } from "@/services/progressService";
 import { ProgressOverviewResponse, ProgressRange } from "@/types/progress";
+import { router } from "expo-router";
 import { styled } from "nativewind";
 import React, { useEffect, useState } from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
@@ -128,11 +129,11 @@ const Progress = () => {
                         <View className="progress-card">
                             <View className="progress-card-header">
                                 <Text className="progress-card-title">Total Volume</Text>
-                                <VolumeChange
-                                    volumeChangePercent={progressOverview?.summary.volume_change_percent || 0}
-                                />
-
+                                {/* <Image source={icons.} className="progress-card-icon" /> */}
                             </View>
+                            <VolumeChange
+                                volumeChangePercent={progressOverview?.summary.volume_change_percent || 0}
+                            />
                             <View className="progress-card-body">
                                 <Text className="progress-card-value"> {progressOverview?.summary.total_volume_kg || 0} </Text>
                             </View>
@@ -240,6 +241,7 @@ const Progress = () => {
                             Exercise Progress
                         </Text>
                         <Pressable
+                            onPress={() => router.push("/progress/exercises")}
                             className="flex-row gap-2 items-center px-2 py-1 bg-faded/10 rounded-xl">
                             <Text className="font-sans text-sm text-accent">
                                 View All
@@ -299,6 +301,7 @@ const Progress = () => {
                             Recent Workouts
                         </Text>
                         <Pressable
+                            onPress={() => router.push("/progress/recent-sessions")}
                             className="flex-row gap-2 items-center px-2 py-1 bg-faded/10 rounded-xl">
                             <Text className="font-sans text-sm text-accent">
                                 View All

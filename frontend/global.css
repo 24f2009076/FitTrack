@@ -597,7 +597,7 @@
 
 
     .chats {
-        @apply flex-1 flex-col gap-2 pb-15;
+        @apply flex-1 flex-col gap-2 pb-20;
     }
 
     .input-area {
@@ -647,5 +647,10 @@
     .menu {
         @apply relative top-0 left-0 w-full h-full max-w-70 bg-muted z-999;
     }
+
+    .exercises {
+        @apply p-3;
+    }
+
     
 }
