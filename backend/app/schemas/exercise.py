@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing import Literal
+from datetime import datetime
 
 
 VALID_MUSCLES = {
@@ -77,3 +78,11 @@ class ExerciseResponse(BaseModel):
     equipment: str | None
     created_by: str | None
     is_deleted: bool
+    
+    
+
+    
+    
+    
+    
+    

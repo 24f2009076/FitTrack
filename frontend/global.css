@@ -590,4 +590,62 @@
     .decrease-change {
         @apply bg-destructive/20;
     }
+
+
+
+
+
+
+    .chats {
+        @apply flex-1 flex-col gap-2 pb-15;
+    }
+
+    .input-area {
+        @apply flex-row items-center justify-between gap-3 p-3; 
+    }
+    
+    .input-field {
+        @apply flex-1 rounded-2xl bg-muted p-4 text-lg font-sans-medium text-primary;
+    }
+
+    .send-button {
+        @apply items-center justify-center rounded-full bg-accent/20 p-3;
+    }
+
+    .conversation-area {
+        @apply flex-1 flex-col gap-2 p-3;
+    }
+
+    .conversation-area-container {
+        @apply grow justify-center items-center p-2 mb-2;
+    }
+
+    .no-messages {
+        @apply flex-col items-center justify-between bg-muted p-7  rounded-2xl shadow-lg min-h-50;
+    }
+
+    .messages {
+        @apply flex-col justify-end w-full gap-5;
+    }
+
+    .chat-message {
+        @apply flex-col items-start px-5 py-3 rounded-2xl max-w-80;
+    }
+
+    .chat-message.user {
+        @apply self-end bg-accent/20;
+    }
+
+    .chat-message.coach {
+        @apply self-start bg-muted;
+    }
+    
+    .message-text {
+        @apply text-lg font-sans-medium text-primary;
+    }
+
+    .menu {
+        @apply relative top-0 left-0 w-full h-full max-w-70 bg-muted z-999;
+    }
+    
 }

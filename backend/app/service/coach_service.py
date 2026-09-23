@@ -1,8 +1,10 @@
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.user import Profile
 from app.models.routine import Routine, RoutineDay, RoutineExercise
 from app.models.workout import WorkoutSession, WorkoutSessionExercise
+from app.models.coach import CoachConversation, CoachMessage
 import os
 
 from google import genai
@@ -187,36 +189,151 @@ def build_coach_prompt(
     question: str,
     routine_context: str,
     workout_context: str,
-    user_context: str
+    conversation_context: str,
 ) -> str:
 
     return f"""
-        You are FitTrack Coach, an AI fitness assistant inside the FitTrack app.
+            You are FitTrack Coach, an AI fitness assistant inside the FitTrack app.
 
-        Your job is to give useful, practical fitness guidance using the user's
-        actual workout routine and workout history when relevant.
-        
-        USER INFORMATION:
-        {user_context}
+            Your job is to give practical and personalized fitness guidance using
+            the user's workout data when relevant.
 
-        USER'S ACTIVE ROUTINE:
-        {routine_context}
+            USER'S ACTIVE ROUTINE:
+            {routine_context}
 
-        USER'S RECENT WORKOUT HISTORY:
-        {workout_context}
+            USER'S RECENT WORKOUT HISTORY:
+            {workout_context}
 
-        USER'S QUESTION:
-        {question}
+            RECENT CONVERSATION:
+            {conversation_context}
 
-        INSTRUCTIONS:
-        - Personalize your response using the workout information above.
-        - Do not invent workout data that is not provided.
-        - If the workout data is not relevant to the question, answer using general fitness knowledge.
-        - Clearly distinguish between what you observe in the user's workout data and general advice.
-        - Do not diagnose injuries or medical conditions.
-        - For pain or injury questions, give conservative training advice and recommend professional medical evaluation when appropriate.
-        - Keep responses practical and easy to understand.
+            CURRENT USER MESSAGE:
+            {question}
+
+            INSTRUCTIONS:
+            - Use the user's workout data when it is relevant.
+            - Use the conversation history to understand follow-up questions.
+            - Do not invent workout data that has not been provided.
+            - Clearly distinguish observations from general fitness advice.
+            - Do not diagnose injuries or medical conditions.
+            - For pain or injury questions, give conservative advice and recommend
+            professional medical evaluation when appropriate.
+            - Keep responses practical and easy to understand.
 """
+
+
+
+
+
+def create_conversation(
+    db: Session,
+    user_id: str,
+    first_message: str
+) -> CoachConversation:
+
+    # Simple temporary title.
+    # Later Gemini can generate prettier titles.
+    title = first_message[:60]
+
+    conversation = CoachConversation(
+        user_id=user_id,
+        title=title
+    )
+
+    db.add(conversation)
+    db.commit()
+    db.refresh(conversation)
+
+    return conversation
+
+
+def get_user_conversation(
+    db: Session,
+    conversation_id: str,
+    user_id: str
+) -> CoachConversation | None:
+
+    return (
+        db.query(CoachConversation)
+        .filter(
+            CoachConversation.id == conversation_id,
+            CoachConversation.user_id == user_id,
+            CoachConversation.is_deleted == False
+        )
+        .first()
+    )
+
+
+def save_coach_message(
+    db: Session,
+    conversation_id: str,
+    role: str,
+    content: str
+) -> CoachMessage:
+
+    message = CoachMessage(
+        conversation_id=conversation_id,
+        role=role,
+        content=content
+    )
+
+    db.add(message)
+
+    conversation = (
+        db.query(CoachConversation)
+        .filter(
+            CoachConversation.id == conversation_id
+        )
+        .first()
+    )
+
+    if conversation:
+        conversation.updated_at = func.now()
+
+    db.commit()
+    db.refresh(message)
+
+    return message
+
+def get_recent_conversation_context(
+    db: Session,
+    conversation_id: str,
+    limit: int = 10
+) -> str:
+
+    messages = (
+        db.query(CoachMessage)
+        .filter(
+            CoachMessage.conversation_id == conversation_id
+        )
+        .order_by(CoachMessage.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+    messages.reverse()
+
+    if not messages:
+        return "No previous conversation."
+
+    context = ""
+
+    for message in messages:
+
+        speaker = (
+            "User"
+            if message.role == "user"
+            else "Coach"
+        )
+
+        context += (
+            f"{speaker}: "
+            f"{message.content}\n"
+        )
+
+    return context
+
+
 
 
 
