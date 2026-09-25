@@ -11,6 +11,7 @@ from app.routers.exercises import router as exercises_router
 from app.routers.workout import router as workout_router
 from app.routers.progress import router as progress_router
 from app.routers.coach import router as coach_router
+from app.routers.home import router as home_router
 
 app = FastAPI(
     title="FitTrack API",
@@ -23,6 +24,7 @@ app.include_router(exercises_router)
 app.include_router(workout_router)
 app.include_router(progress_router)
 app.include_router(coach_router)
+app.include_router(home_router)
 
 @app.get("/")
 def root():

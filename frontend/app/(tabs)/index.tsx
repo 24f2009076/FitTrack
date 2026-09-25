@@ -1,71 +1,88 @@
 import Badge from "@/components/Badge";
-import WeeklyChart from "@/components/WeeklyChart";
-import { USER } from "@/constants/data";
 import { icons } from "@/constants/icons";
 import images from "@/constants/images";
 import { useAuth } from "@/context/AuthContext";
 import "@/global.css";
 import { formatDate, formatTime } from "@/lib/utils";
+import { getHomeData } from "@/services/homeService";
+import { HomeResponse } from "@/types/home";
+import { router, useFocusEffect } from "expo-router";
 import { styled } from "nativewind";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { BarChart } from "react-native-gifted-charts";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
+
 
 const SafeAreaView = styled(RNSafeAreaView);
 
-interface Profile {
-  id: string;
-  username: string;
-  level: string;
-  height: number | null;
-  weight: number | null;
-  goal: string | null;
-  profile_pic_url: string | null;
-}
+
 
 export default function App() {
 
   const { signOut, session } = useAuth();
-  const [profile, setProfile] = useState<null | Profile>(null);
-  const [loadingProfile, setLoadingProfile] = useState(false);
+
+  const [homeData, setHomeData] = useState<HomeResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const accessToken = session?.accessToken;
+
+
+
+
   const date = {
     day: new Date().toLocaleDateString("en-US", { weekday: "long" }),
     date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" }),
   }
 
-  useEffect(() => {
-    if (!session) signOut();
+  useFocusEffect(
+    useCallback(() => {
 
-    const fetchProfile = async () => {
-      try {
-
-        const response = await fetch(
-          `${process.env.EXPO_PUBLIC_API_URL}/api/auth/profile`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${session?.accessToken}`,
-              "Content-Type": "application/json",
-            },
-          }
-        )
-
-        if (!response.ok) {
-          signOut();
-          // throw new Error("Failed to fetch profile: " + response.status);
-        }
-
-        const data = await response.json();
-        setProfile(data);
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      } finally {
-        setLoadingProfile(false);
+      if (!accessToken) {
+        signOut();
+        return;
       }
-    };
 
-    fetchProfile();
-  }, [session]);
+      const fetchHome = async () => {
+        try {
+
+          setLoading(true);
+
+          const data = await getHomeData(
+            accessToken
+          );
+
+          setHomeData(data);
+
+        } catch (error) {
+
+          console.error(
+            "Error fetching home data:",
+            error
+          );
+
+        } finally {
+
+          setLoading(false);
+
+        }
+      };
+
+      fetchHome();
+
+    }, [accessToken])
+  );
+
+  const profile = homeData?.profile;
+  const workout = homeData?.workout;
+  const totalSets =
+    workout?.exercises.reduce(
+      (total, exercise) =>
+        total + exercise.planned_sets,
+      0
+    ) ?? 0;
+
+
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -108,34 +125,49 @@ export default function App() {
 
         <View className="flex-row items-center space-x-2 mb-7">
           <Badge text={profile?.level ?? "Beginner"} icon={icons.levelBadge} />
-          <Badge text={`${USER.streak} day streak`} icon={icons.streakBadge} />
+          <Badge
+            text={`${homeData?.streak ?? 0} day streak`}
+            icon={icons.streakBadge}
+          />
         </View>
 
         {/* *** HOME WORKOUT CARD *** */}
         <View className="home-card">
           <Text className="workout-card-title">TODAY'S WORKOUT</Text>
-          <Text className="workout-card-name">{USER.workout.groups.join(' + ')}</Text>
+          <Text className="workout-card-name">
+            {workout?.groups?.length
+              ? workout.groups.join(" + ")
+              : workout?.is_rest_day
+                ? "Rest Day"
+                : "No Workout"}
+          </Text>
 
           <View className="flex-row justify-start">
             <View className="workout-detail">
               <Image source={icons.exercises} className="workout-detail-icon" />
-              <Text className="workout-detail-text">{USER.workout.exercises.length} exercises</Text>
+              <Text className="workout-detail-text">{workout?.exercises.length ?? 0} exercises</Text>
             </View>
             <View className="workout-detail">
               <Image source={icons.reps} className="workout-detail-icon" />
-              <Text className="workout-detail-text">{USER.workout.exercises.length * 3} sets</Text>
+              <Text className="workout-detail-text">{totalSets} sets</Text>
             </View>
             <View className="workout-detail">
               <Image source={icons.duration} className="workout-detail-icon" />
-              <Text className="workout-detail-text">{formatTime(USER.workout.duration)}</Text>
+              <Text className="workout-detail-text">{formatTime(workout?.duration ?? 0)}</Text>
             </View>
           </View>
 
-          <View>
-            <Pressable className="workout-start-button">
-              <Text className="text-2xl font-sans-bold text-white">Start</Text>
-            </Pressable>
-          </View>
+          {workout && !workout.is_rest_day && workout.routine_day_id && (
+            <View>
+              <Pressable 
+                onPress={() => router.push('/(tabs)/workout')}
+                className="workout-start-button">
+                <Text className="text-2xl font-sans-bold text-white">
+                  Start
+                </Text>
+              </Pressable>
+            </View>
+          )}
 
         </View>
 
@@ -158,7 +190,26 @@ export default function App() {
         {/* *** WEEKLY CHART *** */}
         <View className="home-card">
           <Text className="weekly-chart-title">Weekly Progress</Text>
-          <WeeklyChart weeklyStats={USER.weekly_stats} />
+          <View className="progress-chart">
+            <BarChart
+              data={(homeData?.weekly_volume ?? [])?.map((item, index) => {
+                return {
+                  frontColor: item.volume_kg > 0 ? "#ea7a53af" : "#cccccc",
+                  value: item.volume_kg > 0 ? item.volume_kg : 100,
+                  label: `W ${index + 1}`
+                }
+              })}
+              barWidth={37}
+              spacing={20}
+              noOfSections={3}
+              roundedTop={true}
+              yAxisThickness={0}
+              xAxisThickness={0}
+              hideRules
+              disableScroll
+
+            />
+          </View>
         </View>
 
 
