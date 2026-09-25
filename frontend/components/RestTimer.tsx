@@ -41,7 +41,7 @@ const RestTimer = ({ restDurationSeconds, onFinish, onSkip }: RestTimerProps) =>
         return () => {
             clearTimeout(timeout);
         };
-    }, [remainingSeconds, onFinish]);
+    }, [remainingSeconds]);
 
     return (
         <View className="rest-timer">

@@ -2,6 +2,7 @@ import RoutineCard from "@/components/RoutineCard";
 import { WeeklyScheduleView } from "@/components/WeeklyScheduleView";
 import { icons } from "@/constants/icons";
 import { useAuth } from "@/context/AuthContext";
+import { activateRoutine, deleteRoutine } from "@/services/routineService";
 import { useRoutineStore } from "@/store/routineStore";
 import { GetRoutineResponse } from "@/types/routine";
 import { router, useLocalSearchParams } from "expo-router";
@@ -23,6 +24,38 @@ const ViewRoutine = () => {
     const { session, signOut } = useAuth();
     const [routine, setRoutine] = useState<GetRoutineResponse | null>(null);
     const { id } = useLocalSearchParams<{ id: string }>();
+
+
+    const handleDelete = async (routineId: string) => {
+        try {
+            const response = await deleteRoutine(
+                routineId,
+                session?.accessToken
+            );
+
+            goBack();
+        } catch (error) {
+            console.error("Error deleting routine:", error);
+        }
+    }
+
+    const handleEdit = async () => {
+        // alert("Edit routine");
+        alert("Yeah...just make another routine and delete this one. I don't want to deal with editing routines right now.");
+    }
+
+    const handleActivate = async () => {
+        try {
+            const response = await activateRoutine(
+                routine?.id || "",
+                session?.accessToken
+            );
+
+            goBack();
+        } catch (error) {
+            console.error("Error activating routine:", error);
+        }
+    }
 
     const daysOfWeek = routine?.days.reduce((count, day) => {
         if (day.is_rest_day) return count;
@@ -96,17 +129,26 @@ const ViewRoutine = () => {
                 />
                 {!routine?.is_active &&
                     (<View className="flex-row gap-3 mb-5">
-                        <Pressable className="flex-1 flex-row justify-center items-center p-3 rounded-full border-4 border-accent/80 bg-accent/10">
+                        <Pressable 
+                            onPress={() => handleActivate()}
+                            className="flex-1 flex-row justify-center items-center p-3 rounded-full border-4 border-accent/80 bg-accent/10">
                             <Text className="font-sans-extrabold text-xl text-accent">ACTIVATE</Text>
                         </Pressable>
                     </View>)
                 }
                 <View className="flex-row gap-3">
-                    <Pressable className="view-routine-buttons bg-accent/80">
+                    <Pressable 
+                        onPress={() => handleEdit()}
+                        className="view-routine-buttons bg-accent/80">
                         <Image source={icons.edit} className="size-6 items-center" />
                         <Text className="view-routine-button-text">Edit</Text>
                     </Pressable>
-                    <Pressable className="view-routine-buttons bg-red-800">
+                    <Pressable 
+                        onPress={() => handleDelete(routine?.id || "")
+                        }
+                        disabled={routine?.is_active}
+                        className="view-routine-buttons bg-red-800"
+                    >
                         <Image source={icons.trashMuted} className="size-6 items-center" />
                         <Text className="view-routine-button-text">Delete</Text>
                     </Pressable>

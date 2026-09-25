@@ -339,12 +339,12 @@ const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, 
             <View className="flex-col flex-wrap gap-2 mt-5 border-faded bg-primary/90 p-3 rounded-lg">
                 <Text className="font-sans-bold text-muted text-lg">Today's Workout</Text>
                 {(currentDay?.is_rest_day) && (
-                    <Text className="font-sans-bold text-accent text-md">
+                    <Text className="font-sans-bold text-accent text-xl">
                         Rest Day
                     </Text>
                 )}
                 {(!currentDay?.is_rest_day) && (
-                    <Text className="font-sans-bold text-accent text-md">
+                    <Text className="font-sans-bold text-accent text-xl">
                         {currentDay?.name}
                     </Text>
                 )}

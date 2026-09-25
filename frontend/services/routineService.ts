@@ -72,6 +72,81 @@ export const skipRestDay = async (
 };
 
 
+export const activateRoutine = async (
+  routineId: string,
+  accessToken: string | undefined
+) => {
+  if (!accessToken) {
+    throw new Error("Access token is required to activate a routine.");
+  }
+
+  const response = await fetch(
+    `${process.env.EXPO_PUBLIC_API_URL}/api/routines/${routineId}/activate`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      }
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(
+      errorData.detail ||
+      `Failed to activate routine: ${response.status}`
+    );
+  }
+
+  const data = await response.json();
+  return data;
+}
+
+
+
+
+export const deleteRoutine = async (
+  routineId: string,
+  accessToken: string | undefined
+) => {
+  if (!accessToken) {
+    throw new Error("Access token is required to delete a routine.");
+  }
+
+  const response = await fetch(
+    `${process.env.EXPO_PUBLIC_API_URL}/api/routines/${routineId}/delete`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      }
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(
+      errorData.detail ||
+      `Failed to delete routine: ${response.status}`
+    );
+  }
+
+  const data = await response.json();
+  return data;
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 

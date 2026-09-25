@@ -1,3 +1,5 @@
+import { useAuth } from "@/context/AuthContext";
+import { activateRoutine } from "@/services/routineService";
 import { GetRoutineResponse } from "@/types/routine";
 import { router } from "expo-router";
 import { Pressable, Text, View } from "react-native";
@@ -12,7 +14,30 @@ const dayMap: { [key: number]: string } = {
     6: "S"
 }
 
-export const WorkoutRoutine = ({ routine }: { routine: GetRoutineResponse }) => {
+
+
+export const WorkoutRoutine = ({
+    routine,
+    onActivated,
+}: {
+    routine: GetRoutineResponse;
+    onActivated?: () => void | Promise<void>;
+}) => {
+
+    const { session } = useAuth();
+
+    const handleActivate = async (routineId: string) => {
+        try {
+            await activateRoutine(
+                routineId,
+                session?.accessToken
+            );
+            await onActivated?.();
+        } catch (error) {
+            console.error("Error activating routine:", error);
+        }
+}
+
 
     const daysOfWeek = routine.days.reduce((acc, day) => {
         if (day.is_rest_day) return acc;
@@ -57,7 +82,9 @@ export const WorkoutRoutine = ({ routine }: { routine: GetRoutineResponse }) => 
                         </View>
                     ))}
                 </View>
-                <Pressable className="routine-card-button flex-1">
+                <Pressable
+                    onPress={() => handleActivate(routine.id)}
+                    className="routine-card-button flex-1">
                     <Text className="text-sm font-sans-bold text-accent">Activate</Text>
                 </Pressable>
             </View>

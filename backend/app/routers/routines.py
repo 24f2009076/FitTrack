@@ -207,3 +207,106 @@ def get_routine(routine_id: str, db: Session = Depends(get_db), current_user=Dep
         )
     
     return routine
+
+
+
+@router.patch("/{routine_id}/activate")
+def activate_routine(
+    routine_id: str, 
+    db: Session = Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    
+    routine = db.query(Routine).filter(
+        Routine.id == routine_id,
+        Routine.user_id == str(current_user.id),
+        Routine.is_deleted.is_(False)
+    ).first()
+    
+    
+    if not routine:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Routine with ID {routine_id} not found."
+        )
+    
+    if routine.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Routine with ID {routine_id} is already active."
+        )
+        
+    active_routine = db.query(Routine).filter(
+        Routine.user_id == str(current_user.id),
+        Routine.is_active == True,
+        Routine.is_deleted == False
+    ).first()
+    
+    try:
+        if active_routine:
+            active_routine.is_active = False
+            db.flush()
+            
+        routine.is_active = True
+        db.commit()
+        db.refresh(routine)
+        
+        return {
+            "message": f"Routine with ID {routine_id} has been activated.",
+            "routine_id": routine.id
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
+
+@router.delete("/{routine_id}/delete")
+def delete_routine(
+    routine_id: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    
+    routine = db.query(Routine).filter(
+        Routine.id == routine_id,
+        Routine.user_id == str(current_user.id),
+        Routine.is_deleted.is_(False),
+        Routine.is_active.is_(False)
+    ).first()
+    
+    
+    if not routine:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Routine with ID {routine_id} not found or is currently active."
+        )
+    
+    try:
+        routine.is_deleted = True
+        db.commit()
+        
+        return {
+            "message": f"Routine with ID {routine_id} has been deleted.",
+            "routine_id": routine.id
+        }
+    
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    
+    
+
+
+
+
+
+
+
+

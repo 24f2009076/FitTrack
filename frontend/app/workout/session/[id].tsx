@@ -24,6 +24,9 @@ const formatElapsedTime = (totalSeconds: number) => {
 };
 
 const formatDuration = (seconds: number | undefined) => {
+    if (seconds === undefined) {
+        return "00:00";
+    }
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
 
@@ -216,40 +219,56 @@ export default function WorkoutSessionPage() {
     ]);
 
 
-    useFocusEffect(
+    // useFocusEffect(
 
+    //     useCallback(() => {
+
+    //         if (!workout?.started_at) return;
+
+    //         const startedAt = new Date(workout.started_at).getTime();
+
+    //         if (Number.isNaN(startedAt)) return;
+
+    //         const updateElapsedTime = () => {
+    //             const endTime = workout.completed_at
+    //                 ? new Date(workout.completed_at).getTime()
+    //                 : Date.now();
+
+    //             setElapsedSeconds(
+    //                 Math.max(
+    //                     0,
+    //                     Math.floor((endTime - startedAt) / 1000)
+    //                 )
+    //             )
+    //         }
+
+    //         updateElapsedTime();
+
+    //         if (workout.completed_at) return;
+
+    //         const interval = setInterval(updateElapsedTime, 1000);
+
+    //         return () => {
+    //             clearInterval(interval);
+    //         }
+    //     }, [workout?.started_at, workout?.completed_at])
+    // )
+
+    useFocusEffect(
         useCallback(() => {
 
-            if (!workout?.started_at) return;
+            if (workout?.status === "completed") return;
 
-            const startedAt = new Date(workout.started_at).getTime();
-
-            if (Number.isNaN(startedAt)) return;
-
-            const updateElapsedTime = () => {
-                const endTime = workout.completed_at
-                    ? new Date(workout.completed_at).getTime()
-                    : Date.now();
-
-                setElapsedSeconds(
-                    Math.max(
-                        0,
-                        Math.floor((endTime - startedAt) / 1000)
-                    )
-                )
-            }
-
-            updateElapsedTime();
-
-            if (workout.completed_at) return;
-
-            const interval = setInterval(updateElapsedTime, 1000);
+            const interval = setInterval(() => {
+                setElapsedSeconds((prev) => prev + 1);
+            }, 1000);
 
             return () => {
                 clearInterval(interval);
-            }
-        }, [workout?.started_at, workout?.completed_at])
-    )
+            };
+
+        }, [workout?.status])
+    );
 
     useEffect(() => {
         if (!id || !accessToken) {

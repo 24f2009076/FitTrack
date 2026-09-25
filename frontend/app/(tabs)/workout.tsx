@@ -2,9 +2,9 @@ import ActiveRoutine from "@/components/ActiveRoutine";
 import { RoutineLibrary } from "@/components/RoutineLibrary";
 import { useAuth } from "@/context/AuthContext";
 import { GetRoutineResponse } from "@/types/routine";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { styled } from "nativewind";
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
@@ -33,10 +33,9 @@ const WorkOut = () => {
 
 
 
-    useEffect(() => {
+    const fetchRoutines = useCallback(async () => {
         if (!session) return;
 
-        const fetchRoutines = async () => {
             try {
                 const response = await fetch(
                     `${process.env.EXPO_PUBLIC_API_URL}/api/routines`,
@@ -60,10 +59,11 @@ const WorkOut = () => {
             } catch (error) {
                 console.error("Error fetching routines:", error);
             }
-        };
-
-        fetchRoutines();
     }, [session]);
+
+    useFocusEffect(useCallback(() => {
+        fetchRoutines();
+    }, [fetchRoutines]));
 
     return (
         <SafeAreaView className="flex-1 bg-background">
@@ -104,6 +104,7 @@ const WorkOut = () => {
                 </View>
                 <RoutineLibrary
                     routines={routines}
+                    onActivated={fetchRoutines}
                 />
                 <Pressable className="add-routine-button" onPress={() => router.push("/workout/create-routine")}>
                     <Text className="text-accent font-sans-bold text-lg">+ Add Routine</Text>
