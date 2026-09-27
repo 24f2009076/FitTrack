@@ -1,4 +1,4 @@
-const API_URL = "http://192.168.29.169:8000";
+const API_URL = process.env.EXPO_PUBLIC_API_URL || "";
 
 import { getSupabase } from "@/lib/supabase";
 
@@ -145,3 +145,37 @@ export async function uploadProfileImage(
         publicUrl,
     };
 }
+
+
+
+
+export async function getProfile(
+    accessToken: string
+): Promise<ProfileResponse> {
+
+    const response = await fetch(
+        `${API_URL}/api/auth/profile`,
+        {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+            },
+        }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            result.detail || "Failed to fetch profile"
+        );
+    }
+
+    return result;
+}
+
+
+
+
+

@@ -31,10 +31,10 @@ const WorkOut = () => {
 
     const tags = activeRoutine?.description?.split(",").map((tag) => tag.trim()) ?? [];
 
-
+    const accessToken = session?.accessToken;
 
     const fetchRoutines = useCallback(async () => {
-        if (!session) return;
+        if (!accessToken) return;
 
             try {
                 const response = await fetch(
@@ -59,7 +59,7 @@ const WorkOut = () => {
             } catch (error) {
                 console.error("Error fetching routines:", error);
             }
-    }, [session]);
+    }, [accessToken]);
 
     useFocusEffect(useCallback(() => {
         fetchRoutines();

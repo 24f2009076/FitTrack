@@ -652,5 +652,119 @@
         @apply p-3;
     }
 
+
+
+
+
+
+
+    .profile-section {
+        @apply flex-col items-center p-3 flex-1;
+    }
+
+    .name-and-pic {
+        @apply flex-col items-center gap-5 w-full;
+    }
+
+    .profile-pic {
+        @apply size-45 rounded-full border-8 border-accent/40;
+    }
+
+    .profile-name {
+        @apply text-3xl font-sans-bold text-primary;
+    }
+
+    .profile-name-input  {
+        @apply text-3xl font-sans-bold text-primary;
+    }
+
+    .edit-profile-button {
+        @apply mt-3 items-center justify-center rounded-full bg-primary py-3 px-6;
+    }
+
+    .edit-profile-button-text {
+        @apply text-lg font-sans-extrabold text-white;
+    }
+
+    .user-stats {
+        @apply mt-6 flex-col justify-between items-center gap-2 w-full p-2;
+    }
+
+    .user-stat-row {
+        @apply flex-row w-full gap-2 justify-center items-center;
+    }
+
+    .stat {
+        @apply w-1/2 bg-muted rounded-xl px-2 py-4;
+    }
+
+    .input-stat {
+        @apply flex-1 bg-muted rounded-xl px-2 py-4 flex-row items-center justify-start gap-5;
+    }
+
+    .stat-header {
+        @apply font-sans text-lg text-primary;
+    }
+
+    .stat-value {
+        @apply flex-row items-baseline gap-1 pt-5 justify-center ;
+    }
+
+    .stat-value-input {
+        @apply font-sans-bold text-2xl;
+    }
+
+    .stat-number {
+        @apply font-sans-bold text-4xl;
+    }
+
+    .stat-level {
+        @apply font-sans-bold text-sm;
+    }
+
+    .logout-section {
+        @apply mt-6 flex-row items-center justify-center gap-2 w-full p-2;
+    }
+
+    .logout-button {
+        @apply items-center justify-center rounded-xl bg-destructive/20 py-3 px-6 flex-1;
+    }
+
+    .logout-button-text {
+        @apply text-lg font-sans-extrabold text-destructive;
+    }
+
+
+    .save-button, .cancel-button {
+        @apply items-center justify-center rounded-xl bg-accent/20 py-3 px-6 flex-1;
+    }
+
+    .save-button-text, .cancel-button-text {
+        @apply text-lg font-sans-extrabold;
+    }
+
+    .save-button {
+        @apply bg-success/20;
+    }
+
+    .cancel-button {
+        @apply bg-destructive/20;
+    }
+
+    .remove-image-button {
+        @apply mt-2 items-center justify-center rounded-xl bg-destructive/20 py-2 px-4;
+    }
+
+    .remove-image-button-text {
+        @apply text-sm font-sans-bold text-destructive;
+    }
+
+    .edit-icon-container {
+        @apply absolute bottom-0 right-0 p-3 bg-accent rounded-full flex items-center justify-center;
+    }
+
+    .edit-icon {
+        @apply size-6;
+    }
     
 }

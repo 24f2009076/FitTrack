@@ -38,3 +38,9 @@ export interface HomeResponse {
     workout: HomeWorkout;
     weekly_volume: WeeklyVolumePoint[];
 }
+
+
+
+
+
+

@@ -8,7 +8,7 @@ import { getHomeData } from "@/services/homeService";
 import { HomeResponse } from "@/types/home";
 import { router, useFocusEffect } from "expo-router";
 import { styled } from "nativewind";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
@@ -34,6 +34,12 @@ export default function App() {
     day: new Date().toLocaleDateString("en-US", { weekday: "long" }),
     date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" }),
   }
+
+  useEffect(() => {
+    if (!accessToken) {
+      signOut();
+    }
+  }, [accessToken]);
 
   useFocusEffect(
     useCallback(() => {
@@ -90,14 +96,21 @@ export default function App() {
       <View className="home-navbar px-5 flex">
         <View className="home-user">
 
+          <Pressable
+            className=""
+            onPress={
+              () => router.push("/profile")
+            }
+          >
+            <Image source={
+              profile?.profile_pic_url
+                ? {
+                  uri: profile.profile_pic_url
+                }
+                : images.avatar
+            } className="home-avatar" />
+          </Pressable>
 
-          <Image source={
-            profile?.profile_pic_url
-              ? {
-                uri: profile.profile_pic_url
-              }
-              : images.avatar
-          } className="home-avatar" />
 
 
           <Text className="home-user-name flex-1"> {profile?.username} </Text>
@@ -159,7 +172,7 @@ export default function App() {
 
           {workout && !workout.is_rest_day && workout.routine_day_id && (
             <View>
-              <Pressable 
+              <Pressable
                 onPress={() => router.push('/(tabs)/workout')}
                 className="workout-start-button">
                 <Text className="text-2xl font-sans-bold text-white">

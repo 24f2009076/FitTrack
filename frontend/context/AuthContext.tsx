@@ -3,6 +3,7 @@ import {
     ReactNode,
     useContext,
     useEffect,
+    useRef,
     useState,
 } from "react";
 
@@ -37,14 +38,85 @@ const USER_ID_KEY = "fittrack_user_id";
 const EMAIL_KEY = "fittrack_email";
 
 
+async function persistSession(currentSession: AuthSession) {
+    await Promise.all([
+        SecureStore.setItemAsync(ACCESS_TOKEN_KEY, currentSession.accessToken),
+        SecureStore.setItemAsync(REFRESH_TOKEN_KEY, currentSession.refreshToken),
+        SecureStore.setItemAsync(USER_ID_KEY, currentSession.userId),
+        SecureStore.setItemAsync(EMAIL_KEY, currentSession.email),
+    ]);
+}
+
+
+async function clearStoredSession() {
+    await Promise.all([
+        SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY),
+        SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY),
+        SecureStore.deleteItemAsync(USER_ID_KEY),
+        SecureStore.deleteItemAsync(EMAIL_KEY),
+    ]);
+}
+
+
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [session, setSession] = useState<AuthSession | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const sessionRef = useRef<AuthSession | null>(null);
 
 
     useEffect(() => {
-        restoreSession();
-    }, []);
+        let isMounted = true;
+
+        const initializeAuth = async () => {
+            await restoreSession();
+
+            if (!isMounted) return;
+
+            const supabase = getSupabase();
+            const {
+                data: { subscription },
+            } = supabase.auth.onAuthStateChange((event, authSession) => {
+                if (!isMounted) return;
+
+                if (event === "SIGNED_OUT" || !authSession) {
+                    sessionRef.current = null;
+                    setSession(null);
+                    clearStoredSession();
+                    return;
+                }
+
+                if (event !== "TOKEN_REFRESHED") return;
+
+                const currentSession = sessionRef.current;
+                if (!currentSession) return;
+
+                const updatedSession: AuthSession = {
+                    accessToken: authSession.access_token,
+                    refreshToken: authSession.refresh_token,
+                    userId: authSession.user?.id ?? currentSession.userId,
+                    email: authSession.user?.email ?? currentSession.email,
+                };
+
+                sessionRef.current = updatedSession;
+                setSession(updatedSession);
+                persistSession(updatedSession).catch((error) => {
+                    console.error("Failed to persist refreshed session:", error);
+                });
+            });
+
+            return subscription;
+        };
+
+        let subscription: { unsubscribe: () => void } | undefined;
+        initializeAuth().then((authSubscription) => {
+            subscription = authSubscription;
+        });
+
+        return () => {
+            isMounted = false;
+            subscription?.unsubscribe();
+        };
+    }, [restoreSession]);
 
 
     async function restoreSession() {
@@ -68,7 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 email
             ) {
                 const supabase = getSupabase();
-                const { error } = await supabase.auth.setSession({
+                const { data: authData, error } = await supabase.auth.setSession({
                     access_token: accessToken,
                     refresh_token: refreshToken
                 })
@@ -79,18 +151,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     return;
                 }
 
-                setSession({
-                    accessToken,
-                    refreshToken,
+                const restoredSession: AuthSession = {
+                    accessToken: authData.session?.access_token ?? accessToken,
+                    refreshToken: authData.session?.refresh_token ?? refreshToken,
                     userId,
                     email,
-                });
+                };
+
+                sessionRef.current = restoredSession;
+                setSession(restoredSession);
+                await persistSession(restoredSession);
             } else {
+                sessionRef.current = null;
                 setSession(null);
             }
 
         } catch (error) {
             console.error("Failed to restore auth session:", error);
+            sessionRef.current = null;
             setSession(null);
 
         } finally {
@@ -100,27 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 
     async function saveSession(newSession: AuthSession) {
-        await Promise.all([
-            SecureStore.setItemAsync(
-                ACCESS_TOKEN_KEY,
-                newSession.accessToken
-            ),
-
-            SecureStore.setItemAsync(
-                REFRESH_TOKEN_KEY,
-                newSession.refreshToken
-            ),
-
-            SecureStore.setItemAsync(
-                USER_ID_KEY,
-                newSession.userId
-            ),
-
-            SecureStore.setItemAsync(
-                EMAIL_KEY,
-                newSession.email
-            ),
-        ]);
+        await persistSession(newSession);
 
         const supabase = getSupabase();
 
@@ -134,6 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
 
+        sessionRef.current = newSession;
         setSession(newSession);
     }
 
@@ -142,14 +201,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
             const supabase = getSupabase();
             await Promise.all([
-                SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY),
-                SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY),
-                SecureStore.deleteItemAsync(USER_ID_KEY),
-                SecureStore.deleteItemAsync(EMAIL_KEY),
-
+                clearStoredSession(),
                 supabase.auth.signOut(),
             ]);
         } finally {
+            sessionRef.current = null;
             setSession(null);
         }
     }

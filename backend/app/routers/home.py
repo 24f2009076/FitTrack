@@ -366,3 +366,43 @@ def _get_streak(
         current_date -= timedelta(days=1)
 
     return streak
+
+
+
+@router.get("/profile")
+def get_profile(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    user_id = current_user.id
+    profile = db.get(Profile, user_id)
+
+    if profile is None:
+        return {
+            "id": user_id,
+            "message": "Profile not found",
+        }
+
+    return profile
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
