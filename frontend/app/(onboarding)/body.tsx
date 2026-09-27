@@ -96,7 +96,7 @@ export default function BodyScreen() {
                     </Text>
 
                     <Text className="mt-3 font-sans-regular text-base leading-6 text-foreground/60">
-                        We'll use this to make your progress tracking more meaningful.
+                        {"We'll use this to make your progress tracking more meaningful."}
                     </Text>
 
 

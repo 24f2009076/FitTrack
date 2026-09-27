@@ -90,6 +90,7 @@ const markdownStyles = {
 const Coach = () => {
 
     const { session } = useAuth();
+    const accessToken = session?.accessToken;
 
     const [query, setQuery] = useState("");
     const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
@@ -193,7 +194,7 @@ const Coach = () => {
         };
 
         fetchMessages();
-    }, [session?.accessToken]);
+    }, [accessToken]);
 
     useEffect(() => {
         if (!session?.accessToken || !currentConversationId) return;
@@ -220,7 +221,7 @@ const Coach = () => {
         return () => {
             isActive = false;
         };
-    }, [session?.accessToken, currentConversationId]);
+    }, [accessToken, currentConversationId]);
 
     useEffect(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });

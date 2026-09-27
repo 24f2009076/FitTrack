@@ -67,6 +67,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         let isMounted = true;
 
+        async function restoreSession() {
+            try {
+                const [
+                    accessToken,
+                    refreshToken,
+                    userId,
+                    email,
+                ] = await Promise.all([
+                    SecureStore.getItemAsync(ACCESS_TOKEN_KEY),
+                    SecureStore.getItemAsync(REFRESH_TOKEN_KEY),
+                    SecureStore.getItemAsync(USER_ID_KEY),
+                    SecureStore.getItemAsync(EMAIL_KEY),
+                ]);
+
+                if (
+                    accessToken &&
+                    refreshToken &&
+                    userId &&
+                    email
+                ) {
+                    const supabase = getSupabase();
+                    const { data: authData, error } = await supabase.auth.setSession({
+                        access_token: accessToken,
+                        refresh_token: refreshToken
+                    })
+
+                    if (error) {
+                        console.error("Failed to set Supabase session:", error);
+                        setSession(null);
+                        return;
+                    }
+
+                    const restoredSession: AuthSession = {
+                        accessToken: authData.session?.access_token ?? accessToken,
+                        refreshToken: authData.session?.refresh_token ?? refreshToken,
+                        userId,
+                        email,
+                    };
+
+                    sessionRef.current = restoredSession;
+                    setSession(restoredSession);
+                    await persistSession(restoredSession);
+                } else {
+                    sessionRef.current = null;
+                    setSession(null);
+                }
+
+            } catch (error) {
+                console.error("Failed to restore auth session:", error);
+                sessionRef.current = null;
+                setSession(null);
+
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
         const initializeAuth = async () => {
             await restoreSession();
 
@@ -116,65 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             isMounted = false;
             subscription?.unsubscribe();
         };
-    }, [restoreSession]);
-
-
-    async function restoreSession() {
-        try {
-            const [
-                accessToken,
-                refreshToken,
-                userId,
-                email,
-            ] = await Promise.all([
-                SecureStore.getItemAsync(ACCESS_TOKEN_KEY),
-                SecureStore.getItemAsync(REFRESH_TOKEN_KEY),
-                SecureStore.getItemAsync(USER_ID_KEY),
-                SecureStore.getItemAsync(EMAIL_KEY),
-            ]);
-
-            if (
-                accessToken &&
-                refreshToken &&
-                userId &&
-                email
-            ) {
-                const supabase = getSupabase();
-                const { data: authData, error } = await supabase.auth.setSession({
-                    access_token: accessToken,
-                    refresh_token: refreshToken
-                })
-
-                if (error) {
-                    console.error("Failed to set Supabase session:", error);
-                    setSession(null);
-                    return;
-                }
-
-                const restoredSession: AuthSession = {
-                    accessToken: authData.session?.access_token ?? accessToken,
-                    refreshToken: authData.session?.refresh_token ?? refreshToken,
-                    userId,
-                    email,
-                };
-
-                sessionRef.current = restoredSession;
-                setSession(restoredSession);
-                await persistSession(restoredSession);
-            } else {
-                sessionRef.current = null;
-                setSession(null);
-            }
-
-        } catch (error) {
-            console.error("Failed to restore auth session:", error);
-            sessionRef.current = null;
-            setSession(null);
-
-        } finally {
-            setIsLoading(false);
-        }
-    }
+    }, []);
 
 
     async function saveSession(newSession: AuthSession) {

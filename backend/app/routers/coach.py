@@ -38,11 +38,11 @@ def chat_with_coach(
             user_id=user_id
         )
 
-        # if not conversation:
-        #     raise HTTPException(
-        #         status_code=404,
-        #         detail="Conversation not found"
-        #     )
+        if not conversation:
+            raise HTTPException(
+                status_code=404,
+                detail="Conversation not found"
+            )
 
     else:
 

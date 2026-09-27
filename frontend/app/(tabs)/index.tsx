@@ -155,7 +155,7 @@ export default function App() {
 
         {/* *** HOME WORKOUT CARD *** */}
         <View className="home-card">
-          <Text className="workout-card-title">TODAY'S WORKOUT</Text>
+          <Text className="workout-card-title">{"TODAY'S WORKOUT"}</Text>
           <Text className="workout-card-name">
             {workout?.groups?.length
               ? workout.groups.join(" + ")
@@ -239,7 +239,7 @@ export default function App() {
         <View className="home-card-insight">
           <Text className="text-xl font-sans-extrabold text-white px-2">Coach Insight</Text>
           <Text className="text-2xl font-sans-bold text-white/80 mt-2 px-2">
-            "Great job on your workouts this week! Keep up the momentum and aim for a new personal best next week."
+            {'"Great job on your workouts this week! Keep up the momentum and aim for a new personal best next week."'}
           </Text>
         </View>
 

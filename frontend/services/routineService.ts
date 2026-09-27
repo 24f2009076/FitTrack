@@ -6,7 +6,7 @@ import type {
   CurrentRoutineDay,
 } from "@/types/workout";
 
-const API_URL = "http://192.168.29.169:8000";
+const API_URL = `${process.env.EXPO_PUBLIC_API_URL}`;
 
 
 export const createRoutine = async (

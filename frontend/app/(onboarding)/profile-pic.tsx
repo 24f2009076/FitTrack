@@ -293,7 +293,7 @@ export default function ProfilePicScreen() {
                 <View className="mt-10 rounded-2xl bg-muted p-5">
 
                     <Text className="font-sans-semibold text-base text-foreground">
-                        You're almost ready 🎉
+                        {"You're almost ready"} 🎉
                     </Text>
 
                     <Text className="mt-2 font-sans-regular text-sm leading-5 text-foreground/60">

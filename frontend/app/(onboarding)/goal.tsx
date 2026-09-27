@@ -93,11 +93,11 @@ export default function GoalScreen() {
                 </View>
 
                 <Text className="mt-4 font-sans-bold text-3xl text-foreground">
-                    What's are we training for?
+                    {"What's are we training for?"}
                 </Text>
 
                 <Text className="mt-2 font-sans-regular text-base text-foreground/60">
-                    We'll use this to personalize your FitTrack experience.
+                    {"We'll use this to personalize your FitTrack experience."}
                 </Text>
 
 

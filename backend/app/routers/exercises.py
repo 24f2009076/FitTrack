@@ -19,6 +19,7 @@ router = APIRouter(
 
 @router.post(
     "/bulk",
+    current_user=Depends(get_current_user),
     response_model=list[ExerciseResponse],
     status_code=status.HTTP_201_CREATED,
 )

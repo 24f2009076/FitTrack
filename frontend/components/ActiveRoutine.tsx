@@ -180,9 +180,7 @@ const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, 
 
     const { session } = useAuth();
 
-    if (!session) {
-        return null;
-    }
+
 
     useFocusEffect(
         useCallback(() => {
@@ -228,6 +226,9 @@ const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, 
         }, [routineId, session?.accessToken])
     );
 
+    if (!session) {
+        return null;
+    }
 
     return (
         <View className="active-routine">
@@ -351,7 +352,7 @@ const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, 
             </View>
 
             <View className="flex-col flex-wrap gap-2 mt-5 border-faded bg-primary/90 p-3 rounded-lg">
-                <Text className="font-sans-bold text-muted text-lg">Today's Workout</Text>
+                <Text className="font-sans-bold text-muted text-lg">{"Today's Workout"}</Text>
                 {(currentDay?.is_rest_day) && (
                     <Text className="font-sans-bold text-accent text-xl">
                         Rest Day

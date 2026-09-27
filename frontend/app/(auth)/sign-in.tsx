@@ -1,15 +1,15 @@
 import { icons } from "@/constants/icons";
+import { useAuth } from "@/context/AuthContext";
+import { login } from "@/services/authService";
 import { router } from 'expo-router';
 import { styled } from 'nativewind';
 import React, { useState } from 'react';
 import { Image, Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
-import { login } from "@/services/authService";
 
 const SafeAreaView = styled(RNSafeAreaView);
 
-import { useAuth } from "@/context/AuthContext";
 
 const SignIn = () => {
     const { saveSession } = useAuth();
@@ -127,10 +127,15 @@ const SignIn = () => {
 
                         <View className="flex-row justify-center items-end gap-0.5">
                             <Text className="text-foreground/70 text-lg mt-5 text-center ">
-                                Don't have an account?{" "}
+                                {"Don't have an account? "}
                             </Text>
-                            <Pressable className="py-1" onPress={handleSignIn}>
-                                <Text className="text-accent font-sans-bold">Sign Up</Text>
+                            <Pressable
+                                className="py-1"
+                                onPress={() => router.push("/(auth)/sign-up")}
+                            >
+                                <Text className="text-accent font-sans-bold">
+                                    Sign Up
+                                </Text>
                             </Pressable>
                         </View>
 
