@@ -1,4 +1,4 @@
-// const API_URL = "http://192.168.29.169:8000";
+const API_URL = `${process.env.EXPO_PUBLIC_API_URL}`;
 import type { ExerciseCreate, ExerciseItem, ExerciseResponse } from "../types/exercise";
 
 export const getExercises = async (accessToken : string): Promise<ExerciseItem[]> => {
