@@ -1,3 +1,4 @@
+import LoadingSpinner from '@/components/LoadingSpinner';
 import { icons } from '@/constants/icons';
 import { useAuth } from '@/context/AuthContext';
 import { getAllSessions } from '@/services/progressService';
@@ -5,7 +6,7 @@ import { WorkoutOverviewResponse } from '@/types/progress';
 import { router } from 'expo-router';
 import { styled } from 'nativewind';
 import { useEffect, useState } from 'react';
-import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { Image, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
 
 export const SafeAreaView = styled(RNSafeAreaView);
@@ -14,13 +15,15 @@ export const SafeAreaView = styled(RNSafeAreaView);
 
 const WorkoutProgress = () => {
     const { session } = useAuth();
+    const accessToken = session?.accessToken;
 
     const [workoutSessions, setWorkoutSessions] = useState<WorkoutOverviewResponse[]>([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchSessions = async () => {
             if (!session) return;
-
+            setLoading(true);
             try {
                 const response = await getAllSessions({
                     accessToken: session.accessToken,
@@ -29,11 +32,13 @@ const WorkoutProgress = () => {
                 setWorkoutSessions(response);
             } catch (error) {
                 console.error("Error fetching workout sessions:", error);
+            } finally {
+                setLoading(false);
             }
         }
 
         fetchSessions();
-    }, [session]);
+    }, [accessToken]);
 
     return (
         <SafeAreaView className="flex-1 bg-background">
@@ -45,6 +50,13 @@ const WorkoutProgress = () => {
                     <Text className="text-2xl font-sans-bold uppercase"> Workouts </Text>
                 </View>
             </View>
+            <Modal
+                visible={loading}
+                transparent={true}
+                animationType="fade"
+            >
+                <LoadingSpinner />
+            </Modal>
 
             <ScrollView
                 className="exercises">

@@ -1,3 +1,4 @@
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { icons } from "@/constants/icons";
 import { useAuth } from '@/context/AuthContext';
 import { getAllExercises } from '@/services/progressService';
@@ -5,7 +6,7 @@ import { ExerciseOverviewResponse } from '@/types/progress';
 import { router } from 'expo-router';
 import { styled } from 'nativewind';
 import { useEffect, useState } from 'react';
-import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { Image, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
 
 export const SafeAreaView = styled(RNSafeAreaView);
@@ -20,8 +21,10 @@ const shortenName = (name: string) => {
 
 const ExerciseProgress = () => {
     const { session } = useAuth();
+    const accessToken = session?.accessToken;
 
     const [exercises, setExercises] = useState<ExerciseOverviewResponse[]>([]);
+    const [loading, setLoading] = useState(true);
 
 
 
@@ -30,6 +33,7 @@ const ExerciseProgress = () => {
         if (!session) return;
 
         const fetchExercises = async () => {
+            setLoading(true);
             try {
                 const response = await getAllExercises({
                     accessToken: session.accessToken,
@@ -40,12 +44,14 @@ const ExerciseProgress = () => {
                 // console.log("Fetched exercises:", exercises);
             } catch (error) {
                 console.error("Error fetching exercises:", error);
+            } finally {
+                setLoading(false);
             }
         }
 
         fetchExercises();
 
-    }, [session]);
+    }, [accessToken]);
 
 
     return (
@@ -58,7 +64,13 @@ const ExerciseProgress = () => {
                     <Text className="text-2xl font-sans-bold uppercase"> Exercises </Text>
                 </View>
             </View>
-
+            <Modal
+                visible={loading}
+                transparent={true}
+                animationType="fade"
+            >
+                <LoadingSpinner />
+            </Modal>
             <ScrollView className="exercises">
                 <View className="exercise-progress-list">
                     {exercises.map((exercise, index) => (

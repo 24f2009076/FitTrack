@@ -7,6 +7,7 @@ import { BlurView } from "expo-blur";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { Alert, Image, Modal, Pressable, Text, View } from "react-native";
+import LoadingSpinner from "./LoadingSpinner";
 
 const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, tags, days }: ActiveRoutineProps) => {
 
@@ -111,6 +112,7 @@ const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, 
         }
 
         setIsStarting(true);
+        setLoading(true);
 
         try {
             await abandonWorkout(
@@ -130,6 +132,7 @@ const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, 
             );
         } finally {
             setIsStarting(false);
+            setLoading(false);
         }
     };
 
@@ -143,6 +146,7 @@ const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, 
         }
 
         setIsSkippingRestDay(true);
+        setLoading(true);
 
         try {
             const nextDay = await skipRestDay(
@@ -160,6 +164,7 @@ const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, 
             );
         } finally {
             setIsSkippingRestDay(false);
+            setLoading(false);
         }
     };
 
@@ -167,6 +172,7 @@ const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, 
     const [isLoadingCurrentDay, setIsLoadingCurrentDay] = useState(true);
     const [currentDayError, setCurrentDayError] = useState<string>();
     const [isSkippingRestDay, setIsSkippingRestDay] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const [showModal, setShowModal] = useState(false);
     const [isStarting, setIsStarting] = useState(false);
@@ -301,6 +307,14 @@ const ActiveRoutine = ({ routineId, routineName, daysOfWeek, numberOfExercises, 
                         </View>
                     </View>
                 </View>
+            </Modal>
+
+            <Modal
+                visible={loading}
+                transparent={true}
+                animationType="fade"
+            >
+                <LoadingSpinner />
             </Modal>
 
             <View className="px-2 py-1 bg-muted/20 rounded-full self-start mb-2 flex-row items-center gap-2">

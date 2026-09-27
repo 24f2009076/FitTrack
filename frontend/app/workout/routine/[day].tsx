@@ -1,5 +1,6 @@
 // app/routine/[day].tsx
 import Dropdown from "@/components/DropDown";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { icons } from "@/constants/icons";
 import { useAuth } from "@/context/AuthContext";
 import { createExercise, getExercises } from "@/services/exerciseService";
@@ -9,7 +10,7 @@ import type { DayKey, RoutineExercise } from "@/types/routine";
 import { router, useLocalSearchParams } from "expo-router";
 import { styled } from "nativewind";
 import { useEffect, useState } from "react";
-import { FlatList, Image, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { FlatList, Image, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 import { useRoutineStore } from "../../../store/routineStore";
 const SafeAreaView = styled(RNSafeAreaView);
@@ -31,11 +32,12 @@ export default function DayInputForm() {
 
 
 
-
+  const [loading, setLoading] = useState(false);
   const { day } = useLocalSearchParams<{ day: DayKey }>();
   const { session } = useAuth();
   const dayData = useRoutineStore((s) => s.days[day]);
   const updateDay = useRoutineStore((s) => s.updateDay);
+
 
   const [muscleGroup, setMuscleGroup] = useState<string | null>(null);
   const [query, setQuery] = useState<string>("");
@@ -44,11 +46,14 @@ export default function DayInputForm() {
 
   useEffect(() => {
     const fetchExercises = async () => {
+      setLoading(true);
       try {
         const data = await getExercises(session?.accessToken || "");
         setExercises(data);
       } catch (error) {
         console.error("Error fetching exercises:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -176,25 +181,6 @@ export default function DayInputForm() {
     updateDay(day, { exercises });
   }
 
-  // const updateExerciseCounter = (id: string, field: "sets" | "reps", delta: number) => {
-  //   const min = field === "sets" ? MIN_SETS : MIN_REPS;
-
-  //   const exercises = selectedExercises.map((exercise) => {
-  //     if (exercise.id !== id) return exercise;
-
-  //     const nextValue = exercise[field] + delta;
-  //     return {
-  //       ...exercise,
-  //       [field]: Math.max(
-  //         field === "sets" ? MIN_SETS : MIN_REPS,
-  //         nextValue
-  //       ),
-  //     };
-  //   });
-
-  //   updateDay(day, { exercises });
-  // };
-
   const addNewExercise = async () => {
     const name = newExerciseName.trim();
 
@@ -263,13 +249,13 @@ export default function DayInputForm() {
   const handleSave = () => {
     const muscleGroups = [...new Set(selectedExercises.map((exercise) => exercise.muscleGroup).filter(Boolean))];
     const isRestDay = selectedExercises.length === 0;
-
     updateDay(day, {
       exercises: selectedExercises,
       configured: true,
       isRestDay,
       title: isRestDay ? undefined : muscleGroups.join(" + "),
     });
+
     router.back();
   };
 
@@ -294,6 +280,14 @@ export default function DayInputForm() {
           placeholderTextColor=""
           className="w-full rounded-lg border border-primary px-0 pl-3 pr-3 py-3 text-lg font-sans-bold text-accent"
         />
+
+        <Modal
+          visible={loading}
+          transparent={true}
+          animationType="fade"
+        >
+          <LoadingSpinner />
+        </Modal>
 
         <ScrollView
           horizontal

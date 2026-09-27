@@ -1,3 +1,4 @@
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { WeeklyRoutineInput } from "@/components/WeeklyRoutineInput";
 import { icons } from "@/constants/icons";
 import { useAuth } from "@/context/AuthContext";
@@ -6,7 +7,7 @@ import { createRoutine } from "@/services/routineService";
 import { router } from "expo-router";
 import { styled } from "nativewind";
 import React, { useState } from "react";
-import { Image, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Image, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 import { useRoutineStore } from "../../store/routineStore";
 
@@ -24,6 +25,7 @@ const AddRoutine = () => {
 
     const [routineTitle, setRoutineTitle] = useState("");
     const [routineDescription, setRoutineDescription] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const routine = useRoutineStore((state) => state.days);
 
@@ -45,6 +47,7 @@ const AddRoutine = () => {
         //     JSON.stringify(payload, null, 2)
         // );
 
+        setLoading(true);
         try {
             const createdRoutine = await createRoutine(
                 payload,
@@ -65,6 +68,8 @@ const AddRoutine = () => {
                 "Failed to create routine:",
                 error
             );
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -79,6 +84,14 @@ const AddRoutine = () => {
                     <Text className="text-2xl font-sans-bold"> Add Routine </Text>
                 </View>
             </View>
+
+            <Modal
+                visible={loading}
+                transparent={true}
+                animationType="fade"
+            >
+                <LoadingSpinner />
+            </Modal>
 
 
             <ScrollView

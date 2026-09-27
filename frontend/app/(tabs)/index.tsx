@@ -1,4 +1,5 @@
 import Badge from "@/components/Badge";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { icons } from "@/constants/icons";
 import images from "@/constants/images";
 import { useAuth } from "@/context/AuthContext";
@@ -9,7 +10,7 @@ import { HomeResponse } from "@/types/home";
 import { router, useFocusEffect } from "expo-router";
 import { styled } from "nativewind";
 import { useCallback, useEffect, useState } from "react";
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Image, Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
@@ -119,6 +120,14 @@ export default function App() {
           </Pressable>
         </View>
       </View>
+
+      <Modal
+        visible={loading}
+        transparent={true}
+        animationType="fade"
+      >
+        <LoadingSpinner />
+      </Modal>
 
       <ScrollView
         className="flex-1 px-5"

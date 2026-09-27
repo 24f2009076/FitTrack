@@ -1,3 +1,4 @@
+import LoadingSpinner from "@/components/LoadingSpinner";
 import ProgressDropdown from "@/components/ProgressDropDown";
 import VolumeChange from "@/components/VolumeChange";
 import { icons } from "@/constants/icons";
@@ -7,7 +8,7 @@ import { ProgressOverviewResponse, ProgressRange } from "@/types/progress";
 import { router } from "expo-router";
 import { styled } from "nativewind";
 import React, { useEffect, useState } from 'react';
-import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { Image, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { BarChart } from "react-native-gifted-charts";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
@@ -49,6 +50,7 @@ const Progress = () => {
 
     const [progressRange, setProgressRange] = useState<ProgressRange>("30d");
     const [progressOverview, setProgressOverview] = useState<ProgressOverviewResponse>();
+    const [loading, setLoading] = useState(true);
 
     const peakWeek = progressOverview?.weekly_volume?.reduce((max, item) =>
         item.volume_kg > max.volume_kg ? item : max
@@ -66,6 +68,7 @@ const Progress = () => {
         if (!session) return;
 
         const fetchProgressOverview = async () => {
+            setLoading(true);
             try {
                 const data = await getProgressOverview({
                     accessToken: session.accessToken,
@@ -75,6 +78,8 @@ const Progress = () => {
                 // console.log("Progress Overview Data:", data);
             } catch (error) {
                 console.error("Error fetching progress overview:", error);
+            } finally {
+                setLoading(false);
             }
         }
 
@@ -90,6 +95,14 @@ const Progress = () => {
                     <Text className="text-2xl font-sans-bold"> Progress </Text>
                 </View>
             </View>
+
+            <Modal
+                visible={loading}
+                transparent={true}
+                animationType="fade"
+            >
+                <LoadingSpinner />
+            </Modal>
 
             <ScrollView
                 className="flex-1 px-5"
@@ -235,12 +248,14 @@ const Progress = () => {
                 </View>
 
 
-                <View className="exercise-progress">
-                    <View className="progress-section-header">
-                        <Text className="font-sans-bold text-2xl">
-                            Exercise Progress
-                        </Text>
-                        <Pressable
+
+                {progressOverview?.exercise_progress && (
+                    <View className="exercise-progress">
+                        <View className="progress-section-header">
+                            <Text className="font-sans-bold text-2xl">
+                                Exercise Progress
+                            </Text>
+                            <Pressable
                             onPress={() => router.push("/progress/exercises")}
                             className="flex-row gap-2 items-center px-2 py-1 bg-faded/10 rounded-xl">
                             <Text className="font-sans text-sm text-accent">
@@ -293,9 +308,10 @@ const Progress = () => {
                             </View>
                         ))}
                     </View>
-                </View>
+                </View>)}
 
-                <View className="exercise-progress">
+                {progressOverview?.recent_workouts && (
+                    <View className="exercise-progress">
                     <View className="progress-section-header">
                         <Text className="font-sans-bold text-2xl">
                             Recent Workouts
@@ -334,7 +350,7 @@ const Progress = () => {
                             </View>
                         ))}
                     </View>
-                </View>
+                </View>)}
 
 
             </ScrollView>

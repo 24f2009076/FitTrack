@@ -6,11 +6,12 @@ import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { styled } from "nativewind";
 import { useEffect, useState } from "react";
-import { Image, Pressable, Text, TextInput, View } from "react-native";
+import { Image, Modal, Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 
 
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { icons } from "@/constants/icons";
 import images from "@/constants/images";
 import { useAuth } from "@/context/AuthContext";
@@ -257,6 +258,14 @@ const EditProfile = () => {
                     <Text className="text-2xl font-sans-bold"> EDIT PROFILE </Text>
                 </View>
             </View>
+
+            <Modal
+                visible={loading}
+                transparent={true}
+                animationType="fade"
+            >
+                <LoadingSpinner />
+            </Modal>
 
             <View className="profile-section">
 

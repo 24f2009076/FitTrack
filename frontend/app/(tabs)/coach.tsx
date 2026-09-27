@@ -98,6 +98,7 @@ const Coach = () => {
     const [sending, setSending] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
     const scrollViewRef = useRef<ScrollView>(null);
+    const [loading, setLoading] = useState(false);
 
     const handleNewChat = () => {
         setCurrentConversationId(null);
@@ -179,12 +180,15 @@ const Coach = () => {
         if (!session) return;
 
         const fetchMessages = async () => {
+            setLoading(true);
             try {
                 const data = await getConversations(session?.accessToken);
                 setMessageHistory(data);
             }
             catch (error) {
                 console.error("Error fetching conversations:", error);
+            } finally {
+                setLoading(false);
             }
         };
 

@@ -18,7 +18,7 @@ router = APIRouter(
 @router.post("/chat", response_model=CoachChatResponse)
 def chat_with_coach(
     payload: CoachChatRequest,
-    isActive: bool = False,
+    isActive: bool = True,
     current_user=Depends(get_current_user),
     db: Session=Depends(get_db)
 ):

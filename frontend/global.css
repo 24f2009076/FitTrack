@@ -766,5 +766,26 @@
     .edit-icon {
         @apply size-6;
     }
+
+
+
+
+
+
+
+
+
+
+    .spinner {
+        @apply flex-1 items-center justify-center p-3 ;
+    }
+
+    .spinner-content {
+        @apply rounded-xl bg-muted size-50 flex-row justify-center items-center gap-1;
+    }
+
+    .circle-accent {
+        @apply size-3 rounded-full bg-accent;
+    }
     
 }

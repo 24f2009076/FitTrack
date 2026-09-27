@@ -1,3 +1,4 @@
+import LoadingSpinner from "@/components/LoadingSpinner";
 import RoutineCard from "@/components/RoutineCard";
 import { WeeklyScheduleView } from "@/components/WeeklyScheduleView";
 import { icons } from "@/constants/icons";
@@ -8,7 +9,7 @@ import { GetRoutineResponse } from "@/types/routine";
 import { router, useLocalSearchParams } from "expo-router";
 import { styled } from "nativewind";
 import { useEffect, useState } from "react";
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Image, Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
@@ -22,11 +23,14 @@ const goBack = () => {
 const ViewRoutine = () => {
 
     const { session, signOut } = useAuth();
+    const accessToken = session?.accessToken;
     const [routine, setRoutine] = useState<GetRoutineResponse | null>(null);
     const { id } = useLocalSearchParams<{ id: string }>();
+    const [loading, setLoading] = useState(false);
 
 
     const handleDelete = async (routineId: string) => {
+        setLoading(true);
         try {
             const response = await deleteRoutine(
                 routineId,
@@ -36,6 +40,8 @@ const ViewRoutine = () => {
             goBack();
         } catch (error) {
             console.error("Error deleting routine:", error);
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -45,6 +51,7 @@ const ViewRoutine = () => {
     }
 
     const handleActivate = async () => {
+        setLoading(true);
         try {
             const response = await activateRoutine(
                 routine?.id || "",
@@ -54,6 +61,8 @@ const ViewRoutine = () => {
             goBack();
         } catch (error) {
             console.error("Error activating routine:", error);
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -74,6 +83,7 @@ const ViewRoutine = () => {
         if (!session) signOut();
 
         const fetchRoutine = async () => {
+            setLoading(true);
             try {
                 const response = await fetch(
                     `${process.env.EXPO_PUBLIC_API_URL}/api/routines/${id}`,
@@ -95,11 +105,13 @@ const ViewRoutine = () => {
                 setRoutine(data);
             } catch (error) {
                 console.error("Error fetching routine:", error);
+            } finally {
+                setLoading(false);
             }
         }
 
         fetchRoutine();
-    }, [id, session]);
+    }, [id, accessToken]);
 
     return (
         <SafeAreaView className="flex-1 bg-background">
@@ -112,6 +124,14 @@ const ViewRoutine = () => {
                     <Text className="text-2xl font-sans-bold capitalize"> {routine?.name || "Routine"} </Text>
                 </View>
             </View>
+
+            <Modal
+                visible={loading}
+                transparent={true}
+                animationType="fade"
+            >
+                <LoadingSpinner />
+            </Modal>
 
             <ScrollView
                 className="flex-1 px-5"
@@ -129,7 +149,7 @@ const ViewRoutine = () => {
                 />
                 {!routine?.is_active &&
                     (<View className="flex-row gap-3 mb-5">
-                        <Pressable 
+                        <Pressable
                             onPress={() => handleActivate()}
                             className="flex-1 flex-row justify-center items-center p-3 rounded-full border-4 border-accent/80 bg-accent/10">
                             <Text className="font-sans-extrabold text-xl text-accent">ACTIVATE</Text>
@@ -137,13 +157,13 @@ const ViewRoutine = () => {
                     </View>)
                 }
                 <View className="flex-row gap-3">
-                    <Pressable 
+                    <Pressable
                         onPress={() => handleEdit()}
                         className="view-routine-buttons bg-accent/80">
                         <Image source={icons.edit} className="size-6 items-center" />
                         <Text className="view-routine-button-text">Edit</Text>
                     </Pressable>
-                    <Pressable 
+                    <Pressable
                         onPress={() => handleDelete(routine?.id || "")
                         }
                         disabled={routine?.is_active}

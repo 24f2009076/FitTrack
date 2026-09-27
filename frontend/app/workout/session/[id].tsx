@@ -1,4 +1,5 @@
 import DurationCounter from "@/components/DurationCounter";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import RepsCounter from "@/components/RepsCounter";
 import RestTimer from "@/components/RestTimer";
 import { icons } from "@/constants/icons";
@@ -8,7 +9,7 @@ import { WorkoutSession, WorkoutSessionExercise } from "@/types/workout";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { styled } from "nativewind";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Image, ScrollView, Text, View } from "react-native";
+import { Image, Modal, ScrollView, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
@@ -135,7 +136,7 @@ export default function WorkoutSessionPage() {
 
         setCompletingSet(true);
         setIsResting(true);
-
+        setLoading(true);
         try {
             const trackingType = currentExercise.tracking_type;
 
@@ -181,6 +182,7 @@ export default function WorkoutSessionPage() {
             console.error("Failed to complete set:", error);
         } finally {
             setCompletingSet(false);
+            setLoading(false);
         }
     }
 
@@ -219,41 +221,6 @@ export default function WorkoutSessionPage() {
     ]);
 
 
-    // useFocusEffect(
-
-    //     useCallback(() => {
-
-    //         if (!workout?.started_at) return;
-
-    //         const startedAt = new Date(workout.started_at).getTime();
-
-    //         if (Number.isNaN(startedAt)) return;
-
-    //         const updateElapsedTime = () => {
-    //             const endTime = workout.completed_at
-    //                 ? new Date(workout.completed_at).getTime()
-    //                 : Date.now();
-
-    //             setElapsedSeconds(
-    //                 Math.max(
-    //                     0,
-    //                     Math.floor((endTime - startedAt) / 1000)
-    //                 )
-    //             )
-    //         }
-
-    //         updateElapsedTime();
-
-    //         if (workout.completed_at) return;
-
-    //         const interval = setInterval(updateElapsedTime, 1000);
-
-    //         return () => {
-    //             clearInterval(interval);
-    //         }
-    //     }, [workout?.started_at, workout?.completed_at])
-    // )
-
     useFocusEffect(
         useCallback(() => {
 
@@ -277,6 +244,7 @@ export default function WorkoutSessionPage() {
         }
 
         const loadWorkout = async () => {
+            setLoading(true);
             try {
                 const data = await getWorkoutSession(
                     id,
@@ -294,17 +262,7 @@ export default function WorkoutSessionPage() {
             }
         };
         loadWorkout();
-    }, [id, accessToken, signOut]);
-
-
-
-    if (loading) {
-        return (
-            <View className="flex-1 items-center justify-center">
-                <ActivityIndicator />
-            </View>
-        );
-    }
+    }, [id, accessToken]);
 
     if (!workout) {
         return (
@@ -356,6 +314,14 @@ export default function WorkoutSessionPage() {
                     <Text className="text-2xl font-sans-bold"> {formatElapsedTime(elapsedSeconds)} </Text>
                 </View>
             </View>
+
+            <Modal
+                visible={loading}
+                transparent={true}
+                animationType="fade"
+            >
+                <LoadingSpinner />
+            </Modal>
 
             <ScrollView
                 className="flex-1 px-5"

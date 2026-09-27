@@ -1,10 +1,11 @@
 import { router } from "expo-router";
 import { styled } from "nativewind";
 import { useEffect, useState } from "react";
-import { Image, Pressable, Text, View } from "react-native";
+import { Image, Modal, Pressable, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { icons } from "@/constants/icons";
 import images from "@/constants/images";
 import { useAuth } from "@/context/AuthContext";
@@ -96,6 +97,14 @@ const Profile = () => {
     return (
         <SafeAreaView
             className="flex-1 bg-background">
+
+            <Modal
+                visible={loading}
+                transparent={true}
+                animationType="fade"
+            >
+                <LoadingSpinner />
+            </Modal>
 
             <View className="home-navbar px-5">
                 <Pressable onPress={() => router.back()} className="size-6 items-center absolute">

@@ -1,11 +1,12 @@
 import ActiveRoutine from "@/components/ActiveRoutine";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { RoutineLibrary } from "@/components/RoutineLibrary";
 import { useAuth } from "@/context/AuthContext";
 import { GetRoutineResponse } from "@/types/routine";
 import { router, useFocusEffect } from "expo-router";
 import { styled } from "nativewind";
 import React, { useCallback, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
@@ -17,6 +18,7 @@ const WorkOut = () => {
 
     const [routines, setRoutines] = useState<GetRoutineResponse[]>([]);
     const [activeRoutine, setActiveRoutine] = useState<GetRoutineResponse | null>(null);
+    const [loading, setLoading] = useState(true);
 
     const daysOfWeek = activeRoutine?.days.reduce((count, day) => {
         if (day.is_rest_day) return count;
@@ -36,29 +38,32 @@ const WorkOut = () => {
     const fetchRoutines = useCallback(async () => {
         if (!accessToken) return;
 
-            try {
-                const response = await fetch(
-                    `${process.env.EXPO_PUBLIC_API_URL}/api/routines`,
-                    {
-                        method: "GET",
-                        headers: {
-                            Authorization: `Bearer ${session?.accessToken}`,
-                            "Content-Type": "application/json",
-                        }
+        setLoading(true);
+        try {
+            const response = await fetch(
+                `${process.env.EXPO_PUBLIC_API_URL}/api/routines`,
+                {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${session?.accessToken}`,
+                        "Content-Type": "application/json",
                     }
-                )
-
-                if (!response.ok) {
-                    throw new Error("Failed to fetch routines: " + response.status);
                 }
+            )
 
-                const data: GetRoutineResponse[] = await response.json();
-                setActiveRoutine(data.find((routine) => routine.is_active) ?? null);
-                setRoutines(data.filter((routine) => !routine.is_active));
-
-            } catch (error) {
-                console.error("Error fetching routines:", error);
+            if (!response.ok) {
+                throw new Error("Failed to fetch routines: " + response.status);
             }
+
+            const data: GetRoutineResponse[] = await response.json();
+            setActiveRoutine(data.find((routine) => routine.is_active) ?? null);
+            setRoutines(data.filter((routine) => !routine.is_active));
+
+        } catch (error) {
+            console.error("Error fetching routines:", error);
+        } finally {
+            setLoading(false);
+        }
     }, [accessToken]);
 
     useFocusEffect(useCallback(() => {
@@ -74,6 +79,13 @@ const WorkOut = () => {
                 </View>
             </View>
 
+            <Modal
+                visible={loading}
+                transparent={true}
+                animationType="fade"
+            >
+                <LoadingSpinner />
+            </Modal>
 
             <ScrollView
                 className="flex-1 px-5"
@@ -90,14 +102,15 @@ const WorkOut = () => {
                 <View className="section-header">
                     <Text className="section-title">ACTIVE ROUTINE</Text>
                 </View>
-                <ActiveRoutine
-                    routineId={activeRoutine?.id || ""}
-                    routineName={activeRoutine?.name || "Beginner Routine"}
-                    daysOfWeek={daysOfWeek}
-                    numberOfExercises={uniqueExerciseCount}
-                    tags={tags}
+                {activeRoutine && (
+                    <ActiveRoutine
+                        routineId={activeRoutine?.id || ""}
+                        routineName={activeRoutine?.name || "Beginner Routine"}
+                        daysOfWeek={daysOfWeek}
+                        numberOfExercises={uniqueExerciseCount}
+                        tags={tags}
                     days={activeRoutine?.days || []}
-                />
+                />)}
 
                 <View className="section-header">
                     <Text className="section-title">LIBRARY</Text>
