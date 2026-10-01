@@ -47,9 +47,9 @@ def list_exercises(
         description="Filter exercises by primary muscle"
     ),
     limit: int = Query(
-        default=20,
+        default=200,
         ge = 1,
-        le = 100
+        le = 200
     ),
     offset: int = Query(
         default=0,

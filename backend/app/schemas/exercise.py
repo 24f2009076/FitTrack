@@ -15,6 +15,8 @@ VALID_MUSCLES = {
     "Glutes",
     "Calves",
     "Core",
+    "Full Body",
+    "Traps"
 }
 
 VALID_EQUIPMENT = {
@@ -28,6 +30,7 @@ VALID_EQUIPMENT = {
     "Bodyweight",
     "EZ Bar",
     "Trap Bar",
+    "Ab Wheel",
     "Other",
 }
 
